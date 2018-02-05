@@ -1,9 +1,6 @@
 import os
 import sys
-import platform
-import subprocess
-import functools
-import tkinter
+import tkinter as tk
 from tkinter import ttk
 
 
@@ -11,8 +8,8 @@ def popup(message):
     """
     Simple popup message box.
     """
-    w = tkinter.Toplevel()
-    m = tkinter.Message(w, text=message, width=400)
+    w = tk.Toplevel()
+    m = tk.Message(w, text=message, width=400)
     m.grid(row=0, column=0, pady=20)
     e = ttk.Button(w, text="OK", command=w.destroy)
     e.grid(row=1, column=0, pady=20)
@@ -45,7 +42,7 @@ class Keynote(object):
         print(ll)
         self.text = ll[1]
         self.kt = None  # Will be filled in when the widget is made
-        self.disabledVar = tkinter.BooleanVar()
+        self.disabledVar = tk.BooleanVar()
         if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
             self.disabledVar.set(True)
         else:
@@ -127,7 +124,7 @@ class Application(ttk.Frame):
         cr += 1
         self.searchLabel = ttk.Label(self.topFrame, text='Search:')
         self.searchLabel.grid(row=cr, column=0)
-        self.searchString = tkinter.StringVar()
+        self.searchString = tk.StringVar()
         self.searchEntry = ttk.Entry(
             self.topFrame, textvariable=self.searchString)
         self.searchEntry.grid(row=cr, column=1)
@@ -203,9 +200,9 @@ class Application(ttk.Frame):
                 kn = ttk.Label(c.tab, text=k.identifier())
                 kn.grid(row=r, column=0, padx=10)
                 lines = len(k.text) / 60 + 2
-                kt = tkinter.Text(c.tab, wrap=tkinter.WORD,
-                                  height=lines, width=60)
-                kt.insert(tkinter.END, k.text)  # use .get to access the text
+                kt = tk.Text(c.tab, wrap=tk.WORD,
+                             height=lines, width=60)
+                kt.insert(tk.END, k.text)  # use .get to access the text
                 kt.grid(row=r, column=1, pady=2)
                 k.textWidget = kt  # needed so we can access the text later
                 kd = ttk.Checkbutton(c.tab, variable=k.disabledVar,
@@ -242,7 +239,7 @@ class Application(ttk.Frame):
             return
         for c in self.categories:
             for k in c.keynotes:
-                ktext = k.textWidget.get('0.0', tkinter.END)
+                ktext = k.textWidget.get('0.0', tk.END)
                 if ktext.upper().count(self.searchString.get().upper()) > 0:
                     k.textWidget.config(bg='orange')
                 else:
@@ -271,7 +268,7 @@ class Application(ttk.Frame):
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.keynotes:
-                    k.text = k.textWidget.get('1.0', tkinter.END)[:-1]
+                    k.text = k.textWidget.get('1.0', tk.END)[:-1]
                     f.write(k.fullstring())
                     f.write('\n')
                     print(k.fullstring())
