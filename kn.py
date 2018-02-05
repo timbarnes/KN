@@ -187,12 +187,14 @@ class Application(ttk.Frame):
             r = 0
             for k in c.keynotes:
                 kn = ttk.Label(c.tab, text=k.identifier())
-                kn.grid(row=r, column=0)
-                kt = tkinter.Text(c.tab, height=2, width=60)
+                kn.grid(row=r, column=0, padx=10)
+                lines = len(k.text) / 60 + 2
+                kt = tkinter.Text(c.tab, wrap=tkinter.WORD,
+                                  height=lines, width=60)
                 kt.insert(tkinter.END, k.text)
-                kt.grid(row=r, column=1)
+                kt.grid(row=r, column=1, pady=2)
                 kd = ttk.Radiobutton(c.tab)
-                kd.grid(row=r, column=2)
+                kd.grid(row=r, column=2, padx=10)
                 r += 1
 
     def loadKeynotes(self):
