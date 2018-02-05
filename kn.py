@@ -25,6 +25,67 @@ def error(message):
     popup("Error: {}".format(message))
 
 
+class Keynote(object):
+    """
+    Information for a single keynote
+    """
+
+    def __init__(self, line, category):
+        """
+        Build a Keynote from a line in the file, attach to a category.
+        """
+        if not line[0] in 'DEN':
+            error("Bad first character: <{}>".format(line))
+        self.den = line[0]   # First character is D, E, or N
+        self.catnum = int(line[1:3])  # Category Number
+        # print(self.catnum)
+        self.num = int(line[3:6])
+        self.category = category  # Zero-based categories
+        ll = line.split('\t')  # Split at tabs
+        print(ll)
+        self.text = ll[1]
+        if len(ll) == 2:  # Keynote is Disabled
+            self.disabled = True
+        else:
+            self.disabled = False
+            if self.catnum != category.num:
+                error("Category mismatch: {} / {}".format(self.catnum, category.num))
+
+    def identifier(self):
+        return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
+
+    def fullstring(self):
+        if self.disabled:
+            return "{}\t{}".format(self.identifier, self.text)
+        else:
+            return "{}\t{}\t{}".format(self.identifier,
+                                       self.text, self.category)
+
+    def __str__(self):
+        return "Keynote({}, {})".format(self.identifier(),
+                                        self.category.__str__())
+
+
+class Category(object):
+    """
+    Information for a specific category.
+    """
+
+    def __init__(self, name, num):
+        """
+        Create category, widget and stringVar
+        """
+        self.name = name
+        self.num = num
+        self.keynotes = []
+
+    def addKeynote(self, keynote):
+        self.keynotes.append(keynote)
+
+    def __str__(self):
+        return "Category({} / {})".format(self.name, self.num)
+
+
 class Application(ttk.Frame):
     """
     Build the application window and initialize a project
@@ -72,35 +133,39 @@ class Application(ttk.Frame):
         """
         Read the category list from a keynote file
         """
+        n = 0
         while True:
             ll = f.readline().rstrip('\n')
-            print("Read <{}>".format(ll))
             if len(ll) == 0 or ll[0] in '# ':
                 break
             else:
-                self.categories.append(ll)
-                print(ll)
-        return len(self.categories)
+                print('Creating category: {}/{}'.format(ll, n))
+                c = Category(ll, n)
+                print(c)
+                self.categories.append(c)  # Make a new one                print(ll)
+                n += 1
+        return self.categories
 
-    def readKeynotes(self, f):
+    def readKeynotes(self, f, category):
         """
-        Read the keynotes from a keynote file
+        Read the keynotes from an open keynote file for one category.
+        Disabled keynotes don't have a 3rd entry;
+        Store them by category.
         """
+        keynotes = []
         ll = f.readline()
         while ll != '':    # Empty string signified end of file
             ll = ll.rstrip(' \n')  # Remove leading/trailing newline or space
-            if ll == '':   # It's a blank line and can be ignored
-                pass
+            if ll == '':   # It's a blank line and the group is finished
+                break
             else:
-                kn = ll.split('\t')
-                if len(kn) == 2:
-                    kn.append('disabled')
-                print('Found keynote: {}'.format(kn))
-                self.keynotes.append(kn)
+                kn = Keynote(ll, category)
+                # print('Found keynote: {}'.format(kn))
+                category.keynotes.append(kn)
             ll = f.readline()
-        return len(self.keynotes)
+        return len(category.keynotes)
 
-    def buildTabs(self):
+    def buildCategories(self):
         """
         Build the tabs and populate with keynotes; add to the main frame.
         """
@@ -119,9 +184,13 @@ class Application(ttk.Frame):
         """
         with open(self.keynote_file, "r") as f:
             self.label1.config(text=self.keynote_file)
-            print("{} categories found.".format(self.readCategories(f)))
-            print("{} keynotes found.".format(self.readKeynotes(f)))
-            self.buildTabs()
+            cats = self.readCategories(f)
+            print("{} categories found.".format(len(cats)))
+            for c in cats:
+                kns = self.readKeynotes(f, c)
+                print("Category {}: {} keynotes found.".format(c.name, kns))
+        # self.buildCategories(cats)
+        # self.buildKeynotes(kns)
 
 
 def main():
