@@ -1,5 +1,6 @@
 import os
 import sys
+import functools
 import tkinter as tk
 from tkinter import ttk
 
@@ -113,7 +114,7 @@ class Application(ttk.Frame):
         self.grid()
         # Action buttons along the top
         cr = 0  # current row
-        self.topFrame = ttk.Frame(self)
+        self.topFrame = ttk.Frame(self, borderwidth=4)
         self.topFrame.grid(row=cr, column=0)
         self.label1 = ttk.Label(self.topFrame, text=self.keynote_file,
                                 justify='right')
@@ -135,6 +136,20 @@ class Application(ttk.Frame):
             self.topFrame, text='Clear', width=12,
             command=self.clearKeynotes)
         self.clearButton.grid(column=2, row=cr)
+        cr += 1
+        self.addDButton = ttk.Button(
+            self.topFrame, text='Add Demo', width=12,
+            command=functools.partial(self.addKeynote, 'Demo'))
+        self.addDButton.grid(column=0, row=cr)
+        self.addEButton = ttk.Button(
+            self.topFrame, text='Add Existing', width=12,
+            command=functools.partial(self.addKeynote, 'Existing'))
+        self.addEButton.grid(column=1, row=cr)
+        self.addNButton = ttk.Button(
+            self.topFrame, text='Add New', width=12,
+            command=functools.partial(self.addKeynote, 'New'))
+        self.addNButton.grid(column=2, row=cr)
+
         # Build the notebook / tabs for each category of keynote
         cr += 1
         self.tabs = ttk.Notebook(self)
@@ -208,6 +223,27 @@ class Application(ttk.Frame):
                                      command=k.toggleDisable)
                 kd.grid(row=r, column=2, padx=10)
                 r += 1
+
+    def addKeynote(self, ktype):
+        """
+        Add a new keynote in the current tab. Type is demo, existing or new.
+        Insert widget into the frame and re-add the elements below.
+        """
+        ctab = self.tabs.select()
+        cname = self.tabs.tab(ctab)['text']
+        for c in self.categories:
+            if c.name == cname:
+                # Make a new blank widget with the right Number
+                print("Adding a keynote to {}".format(cname))
+                if ktype == 'Demo':
+                    # Create a demo keynote
+                    pass
+                elif ktype == 'Existing':
+                    # Create an existing keynote
+                    pass
+                else:
+                    # Create a new keynote
+                    pass
 
     def loadKeynotes(self):
         """
