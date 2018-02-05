@@ -139,7 +139,7 @@ class Application(ttk.Frame):
             if len(ll) == 0 or ll[0] in '# ':
                 break
             else:
-                print('Creating category: {}/{}'.format(ll, n))
+                # print('Creating category: {}/{}'.format(ll, n))
                 c = Category(ll, n)
                 print(c)
                 self.categories.append(c)  # Make a new one                print(ll)
@@ -173,10 +173,27 @@ class Application(ttk.Frame):
         if not cats:
             error("No categories found.")
             return 0
-        for tab in cats:
+        for c in cats:
             fr = ttk.Frame()
             fr.grid()
-            self.tabs.add(fr, text=tab)
+            c.tab = fr  # Save the tab in the category
+            self.tabs.add(fr, text=c.name)  # Put it in the frame
+
+    def buildKeynotes(self):
+        """
+        Create the widgets for keynotes
+        """
+        for c in self.categories:
+            r = 0
+            for k in c.keynotes:
+                kn = ttk.Label(c.tab, text=k.identifier())
+                kn.grid(row=r, column=0)
+                kt = tkinter.Text(c.tab, height=2, width=60)
+                kt.insert(tkinter.END, k.text)
+                kt.grid(row=r, column=1)
+                kd = ttk.Radiobutton(c.tab)
+                kd.grid(row=r, column=2)
+                r += 1
 
     def loadKeynotes(self):
         """
@@ -189,8 +206,8 @@ class Application(ttk.Frame):
             for c in cats:
                 kns = self.readKeynotes(f, c)
                 print("Category {}: {} keynotes found.".format(c.name, kns))
-        # self.buildCategories(cats)
-        # self.buildKeynotes(kns)
+        self.buildCategories()
+        self.buildKeynotes()
 
 
 def main():
