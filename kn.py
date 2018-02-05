@@ -44,22 +44,29 @@ class Keynote(object):
         ll = line.split('\t')  # Split at tabs
         print(ll)
         self.text = ll[1]
-        if len(ll) == 2:  # Keynote is Disabled
-            self.disabled = True
+        self.disabledVar = tkinter.BooleanVar()
+        if ll[2] == 'disabled':  # Keynote is Disabled
+            self.disabledVar.set(True)
         else:
-            self.disabled = False
+            self.disabledVar.set(False)
             if self.catnum != category.num:
-                error("Category mismatch: {} / {}".format(self.catnum, category.num))
+                error("Category mismatch: {} / {}".format(self.catnum,
+                                                          category.num))
 
     def identifier(self):
         return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
 
     def fullstring(self):
-        if self.disabled:
+        if self.disabledVar.get():
             return "{}\t{}".format(self.identifier, self.text)
         else:
             return "{}\t{}\t{}".format(self.identifier,
-                                       self.text, self.category)
+                                       self.text, self.category.name)
+
+    def toggleDisable(self):
+        if self.disabledVar.get():
+            # Should gray out the text field
+            pass
 
     def __str__(self):
         return "Keynote({}, {})".format(self.identifier(),
@@ -114,17 +121,19 @@ class Application(ttk.Frame):
         self.grid()
         # Action buttons along the top
         cr = 0  # current row
-        self.label1 = ttk.Label(self, text=self.keynote_file, justify='right')
-        self.label1.grid(row=cr, column=0)
+        self.topFrame = ttk.Frame(self)
+        self.topFrame.grid(row=cr, column=0)
+        self.label1 = ttk.Label(self.topFrame, text=self.keynote_file, justify='right')
+        self.label1.grid(row=cr, column=0, padx=10)
 
         self.saveButton = ttk.Button(
-            self, text='Save', width=12,
+            self.topFrame, text='Save', width=12,
             command=self.saveKeynotes)
         self.saveButton.grid(column=3, row=cr)
         # Build the notebook / tabs for each category of keynote
         cr += 1
         self.tabs = ttk.Notebook(self)
-        self.tabs.grid(row=cr, column=0)
+        self.tabs.grid(row=cr, column=0, columnspan=2)
         self.search = ttk.Frame()
         self.search.grid()
         self.tabs.add(self.search, text='Search')
@@ -142,7 +151,7 @@ class Application(ttk.Frame):
                 # print('Creating category: {}/{}'.format(ll, n))
                 c = Category(ll, n)
                 print(c)
-                self.categories.append(c)  # Make a new one                print(ll)
+                self.categories.append(c)  # Make a new one
                 n += 1
         return self.categories
 
@@ -152,7 +161,6 @@ class Application(ttk.Frame):
         Disabled keynotes don't have a 3rd entry;
         Store them by category.
         """
-        keynotes = []
         ll = f.readline()
         while ll != '':    # Empty string signified end of file
             ll = ll.rstrip(' \n')  # Remove leading/trailing newline or space
@@ -191,9 +199,10 @@ class Application(ttk.Frame):
                 lines = len(k.text) / 60 + 2
                 kt = tkinter.Text(c.tab, wrap=tkinter.WORD,
                                   height=lines, width=60)
-                kt.insert(tkinter.END, k.text)
+                kt.insert(tkinter.END, k.text)  # use .get to access the text
                 kt.grid(row=r, column=1, pady=2)
-                kd = ttk.Radiobutton(c.tab)
+                kd = ttk.Checkbutton(c.tab, variable=k.disabledVar,
+                                     command=k.toggleDisable)
                 kd.grid(row=r, column=2, padx=10)
                 r += 1
 
