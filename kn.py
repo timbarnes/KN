@@ -44,8 +44,9 @@ class Keynote(object):
         ll = line.split('\t')  # Split at tabs
         print(ll)
         self.text = ll[1]
+        self.kt = None  # Will be filled in when the widget is made
         self.disabledVar = tkinter.BooleanVar()
-        if ll[2] == 'disabled':  # Keynote is Disabled
+        if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
             self.disabledVar.set(True)
         else:
             self.disabledVar.set(False)
@@ -58,9 +59,9 @@ class Keynote(object):
 
     def fullstring(self):
         if self.disabledVar.get():
-            return "{}\t{}".format(self.identifier, self.text)
+            return "{}\t{}".format(self.identifier(), self.text)
         else:
-            return "{}\t{}\t{}".format(self.identifier,
+            return "{}\t{}\t{}".format(self.identifier(),
                                        self.text, self.category.name)
 
     def toggleDisable(self):
@@ -107,12 +108,6 @@ class Application(ttk.Frame):
         self.keynotes = []
         self.createWidgets()
         self.found_widgets = []
-
-    def saveKeynotes(self):
-        """
-        Write out the keynotes file.
-        """
-        print("Saving file {}".format(self.keynote_file))
 
     def createWidgets(self):
         """
@@ -201,6 +196,7 @@ class Application(ttk.Frame):
                                   height=lines, width=60)
                 kt.insert(tkinter.END, k.text)  # use .get to access the text
                 kt.grid(row=r, column=1, pady=2)
+                k.textWidget = kt  # needed so we can access the text later
                 kd = ttk.Checkbutton(c.tab, variable=k.disabledVar,
                                      command=k.toggleDisable)
                 kd.grid(row=r, column=2, padx=10)
@@ -220,6 +216,27 @@ class Application(ttk.Frame):
         self.buildCategories()
         self.buildKeynotes()
 
+    def saveKeynotes(self):
+        """
+        Write out the keynotes file.
+        """
+        print("Saving file {}".format(self.keynote_file))
+        # Move the old file before overwriting
+        os.rename(self.keynote_file, self.keynote_file + '~')
+        with open(self.keynote_file, 'w+') as f:
+            for c in self.categories:
+                f.write(c.name)
+                f.write('\n')
+                print(c.name)
+            f.write('\n')  # A blank line
+            for c in self.categories:
+                for k in c.keynotes:
+                    # k.text = k.textWidget.get('1.0', tkinter.END)
+                    f.write(k.fullstring())
+                    f.write('\n')
+                    print(k.fullstring())
+                f.write('\n')  # A blank line
+
 
 def main():
     """
@@ -230,6 +247,7 @@ def main():
         keynote_file = sys.argv[1]
     except IndexError:
         error("Usage: python kn.py <keynote file>")
+        sys.exit()
     app = Application()
     app.master.title('Revit Keynote Editor')
     app.keynote_file = keynote_file
