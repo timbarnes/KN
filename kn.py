@@ -64,6 +64,9 @@ class Application(ttk.Frame):
         cr += 1
         self.tabs = ttk.Notebook(self)
         self.tabs.grid(row=cr, column=0)
+        self.search = ttk.Frame()
+        self.search.grid()
+        self.tabs.add(self.search, text='Search')
 
     def readCategories(self, file):
         """
@@ -103,6 +106,7 @@ class Application(ttk.Frame):
         Load in a file full of keynotes and build the GUI.
         """
         with open(self.keynote_file, "r") as f:
+            self.label1.config(text=self.keynote_file)
             print("{} categories found.".format(self.readCategories(f)))
             print("{} keynotes found.".format(self.readKeynotes(f)))
             self.buildTabs()
