@@ -68,12 +68,12 @@ class Application(ttk.Frame):
         self.search.grid()
         self.tabs.add(self.search, text='Search')
 
-    def readCategories(self, file):
+    def readCategories(self, f):
         """
         Read the category list from a keynote file
         """
         while True:
-            ll = file.readline().rstrip('\n')
+            ll = f.readline().rstrip('\n')
             print("Read <{}>".format(ll))
             if len(ll) == 0 or ll[0] in '# ':
                 break
@@ -82,11 +82,23 @@ class Application(ttk.Frame):
                 print(ll)
         return len(self.categories)
 
-    def readKeynotes(self, file):
+    def readKeynotes(self, f):
         """
         Read the keynotes from a keynote file
         """
-        pass
+        ll = f.readline()
+        while ll != '':    # Empty string signified end of file
+            ll = ll.rstrip(' \n')  # Remove leading/trailing newline or space
+            if ll == '':   # It's a blank line and can be ignored
+                pass
+            else:
+                kn = ll.split('\t')
+                if len(kn) == 2:
+                    kn.append('disabled')
+                print('Found keynote: {}'.format(kn))
+                self.keynotes.append(kn)
+            ll = f.readline()
+        return len(self.keynotes)
 
     def buildTabs(self):
         """

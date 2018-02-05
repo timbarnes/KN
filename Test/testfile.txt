@@ -8,12 +8,12 @@ E0001	Existing 1	General
 E0002	Existing 2	General
 N0001	New 1	 General
 
-D1001	Demo Site 1	Site
-D1002	Demo Site 2	Site
-D1003	Demo Site disabled
-E1001	Existing Site 1	Site
-N1001	New Site 1    Site
+D0101	Demo Site 1	Site
+D0102	Demo Site 2	Site
+D0103	Demo Site disabled
+E0101	Existing Site 1	Site
+N0101	New Site 1    Site
 
-D2001	Demo Floor 1  Floor
-E2001	Existing Floor 1	Floor
-N2001	New Floor 1    Floor
+D0201	Demo Floor 1  Floor
+E0201	Existing Floor 1	Floor
+N0201	New Floor 1    Floor
