@@ -107,7 +107,6 @@ class Application(ttk.Frame):
         self.keynote_file = "Loading..."
         self.keynotes = []
         self.createWidgets()
-        self.found_widgets = []
 
     def createWidgets(self):
         """
@@ -118,20 +117,32 @@ class Application(ttk.Frame):
         cr = 0  # current row
         self.topFrame = ttk.Frame(self)
         self.topFrame.grid(row=cr, column=0)
-        self.label1 = ttk.Label(self.topFrame, text=self.keynote_file, justify='right')
+        self.label1 = ttk.Label(self.topFrame, text=self.keynote_file,
+                                justify='right')
         self.label1.grid(row=cr, column=0, padx=10)
-
         self.saveButton = ttk.Button(
             self.topFrame, text='Save', width=12,
             command=self.saveKeynotes)
         self.saveButton.grid(column=3, row=cr)
+        cr += 1
+        self.searchLabel = ttk.Label(self.topFrame, text='Search:')
+        self.searchLabel.grid(row=cr, column=0)
+        self.searchString = tkinter.StringVar()
+        self.searchEntry = ttk.Entry(
+            self.topFrame, textvariable=self.searchString)
+        self.searchEntry.grid(row=cr, column=1)
+        self.searchButton = ttk.Button(
+            self.topFrame, text='Search', width=12,
+            command=self.searchKeynotes)
+        self.searchButton.grid(column=3, row=cr)
+        self.clearButton = ttk.Button(
+            self.topFrame, text='Clear', width=12,
+            command=self.clearKeynotes)
+        self.clearButton.grid(column=4, row=cr)
         # Build the notebook / tabs for each category of keynote
         cr += 1
         self.tabs = ttk.Notebook(self)
         self.tabs.grid(row=cr, column=0, columnspan=2)
-        self.search = ttk.Frame()
-        self.search.grid()
-        self.tabs.add(self.search, text='Search')
 
     def readCategories(self, f):
         """
@@ -215,6 +226,35 @@ class Application(ttk.Frame):
                 print("Category {}: {} keynotes found.".format(c.name, kns))
         self.buildCategories()
         self.buildKeynotes()
+
+    def searchKeynotes(self):
+        """
+        Populate the search tab with keynotes matching a search string.
+        Executed as a callback from search button.
+        """
+        ss = self.searchString.get()
+        # Clear the search tab
+        # Develop the list of keynotes matching the string
+        # We probably don't want to build new widgets
+        # - maybe best to add a highlight to the ones that match
+        if len(ss) < 2:
+            error("Search string too short")
+            return
+        for c in self.categories:
+            for k in c.keynotes:
+                ktext = k.textWidget.get('0.0', tkinter.END)
+                if ktext.upper().count(self.searchString.get().upper()) > 0:
+                    k.textWidget.config(bg='orange')
+                else:
+                    k.textWidget.config(bg='white')
+
+    def clearKeynotes(self):
+        """
+        Remove color highlighting from the keynotes.
+        """
+        for c in self.categories:
+            for k in c.keynotes:
+                k.textWidget.config(bg='white')
 
     def saveKeynotes(self):
         """
