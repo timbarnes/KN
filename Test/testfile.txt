@@ -1,0 +1,19 @@
+General
+Site
+Floor
+
+D0001   Demo 1  General
+D0002	Demo 2	General
+E0001	Existing 1	General
+E0002	Existing 2	General
+N0001	New 1	 General
+
+D1001	Demo Site 1	Site
+D1002	Demo Site 2	Site
+D1003	Demo Site disabled
+E1001	Existing Site 1	Site
+N1001	New Site 1    Site
+
+D2001	Demo Floor 1  Floor
+E2001	Existing Floor 1	Floor
+N2001	New Floor 1    Floor

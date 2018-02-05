@@ -34,6 +34,9 @@ class Application(ttk.Frame):
         # Create the main frame
         ttk.Frame.__init__(self, master)
         # Create the communicating variables
+        self.categories = []
+        self.keynote_file = "Loading..."
+        self.keynotes = []
         self.createWidgets()
         self.found_widgets = []
 
@@ -41,7 +44,7 @@ class Application(ttk.Frame):
         """
         Write out the keynotes file.
         """
-        print("Saving file {}".format(KEYNOTE_FILE))
+        print("Saving file {}".format(self.keynote_file))
 
     def createWidgets(self):
         """
@@ -50,28 +53,76 @@ class Application(ttk.Frame):
         self.grid()
         # Action buttons along the top
         cr = 0  # current row
-        self.label1 = ttk.Label(self, text=KEYNOTE_FILE, justify='right')
+        self.label1 = ttk.Label(self, text=self.keynote_file, justify='right')
         self.label1.grid(row=cr, column=0)
 
         self.saveButton = ttk.Button(
             self, text='Save', width=12,
             command=self.saveKeynotes)
         self.saveButton.grid(column=3, row=cr)
+        # Build the notebook / tabs for each category of keynote
+        cr += 1
+        self.tabs = ttk.Notebook(self)
+        self.tabs.grid(row=cr, column=0)
+
+    def readCategories(self, file):
+        """
+        Read the category list from a keynote file
+        """
+        while True:
+            ll = file.readline().rstrip('\n')
+            print("Read <{}>".format(ll))
+            if len(ll) == 0 or ll[0] in '# ':
+                break
+            else:
+                self.categories.append(ll)
+                print(ll)
+        return len(self.categories)
+
+    def readKeynotes(self, file):
+        """
+        Read the keynotes from a keynote file
+        """
+        pass
+
+    def buildTabs(self):
+        """
+        Build the tabs and populate with keynotes; add to the main frame.
+        """
+        cats = self.categories
+        if not cats:
+            error("No categories found.")
+            return 0
+        for tab in cats:
+            fr = ttk.Frame()
+            fr.grid()
+            self.tabs.add(fr, text=tab)
+
+    def loadKeynotes(self):
+        """
+        Load in a file full of keynotes and build the GUI.
+        """
+        with open(self.keynote_file, "r") as f:
+            print("{} categories found.".format(self.readCategories(f)))
+            print("{} keynotes found.".format(self.readKeynotes(f)))
+            self.buildTabs()
 
 
 def main():
     """
     Top level function processes arguments and runs the app.
     """
-    global KEYNOTE_FILE
+    # Create and run the application object
     try:
-        KEYNOTE_FILE = sys.argv[1]
-        # Create and run the application object
-        app = Application()
-        app.master.title('Revit Keynote Editor')
-        app.mainloop()
+        keynote_file = sys.argv[1]
     except IndexError:
-        error("Usage: python pf.py <folder1> <folder2>")
+        error("Usage: python kn.py <keynote file>")
+    app = Application()
+    app.master.title('Revit Keynote Editor')
+    app.keynote_file = keynote_file
+    if app.loadKeynotes():
+        print('Keynote file loaded successfully.')
+    app.mainloop()
 
 
 if __name__ == '__main__':
