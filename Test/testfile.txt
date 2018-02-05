@@ -4,7 +4,7 @@ Floor
 
 D0001	Demo 1	General
 D0002	Demo 2	General
-E0001	Existing 1	General
+E0001	Existing 1 don't touch	General
 E0002	Existing 2	General
 N0001	New 1	General
 
@@ -15,6 +15,6 @@ E0101	Existing Site 1	Site
 N0101	New Site 1	Site
 
 D0201	Demo Floor 1	Floor
-E0201	Existing Floor 1
+E0201	Existing Floor 1	Floor
 N0201	New Floor 1	Floor
 

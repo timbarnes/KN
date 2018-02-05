@@ -231,7 +231,7 @@ class Application(ttk.Frame):
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.keynotes:
-                    # k.text = k.textWidget.get('1.0', tkinter.END)
+                    k.text = k.textWidget.get('1.0', tkinter.END)[:-1]
                     f.write(k.fullstring())
                     f.write('\n')
                     print(k.fullstring())
