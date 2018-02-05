@@ -83,6 +83,7 @@ class Category(object):
         self.name = name
         self.num = num
         self.keynotes = []
+        self.catWidget = None  # The tab, so we can tweak it's label
 
     def addKeynote(self, keynote):
         self.keynotes.append(keynote)
@@ -120,22 +121,20 @@ class Application(ttk.Frame):
         self.saveButton = ttk.Button(
             self.topFrame, text='Save', width=12,
             command=self.saveKeynotes)
-        self.saveButton.grid(column=3, row=cr)
+        self.saveButton.grid(column=2, row=cr)
         cr += 1
-        self.searchLabel = ttk.Label(self.topFrame, text='Search:')
-        self.searchLabel.grid(row=cr, column=0)
         self.searchString = tk.StringVar()
         self.searchEntry = ttk.Entry(
             self.topFrame, textvariable=self.searchString)
-        self.searchEntry.grid(row=cr, column=1)
+        self.searchEntry.grid(row=cr, column=0)
         self.searchButton = ttk.Button(
             self.topFrame, text='Search', width=12,
             command=self.searchKeynotes)
-        self.searchButton.grid(column=3, row=cr)
+        self.searchButton.grid(column=1, row=cr)
         self.clearButton = ttk.Button(
             self.topFrame, text='Clear', width=12,
             command=self.clearKeynotes)
-        self.clearButton.grid(column=4, row=cr)
+        self.clearButton.grid(column=2, row=cr)
         # Build the notebook / tabs for each category of keynote
         cr += 1
         self.tabs = ttk.Notebook(self)
@@ -187,7 +186,7 @@ class Application(ttk.Frame):
         for c in cats:
             fr = ttk.Frame()
             fr.grid()
-            c.tab = fr  # Save the tab in the category
+            c.catWidget = fr  # Save the tab in the category
             self.tabs.add(fr, text=c.name)  # Put it in the frame
 
     def buildKeynotes(self):
@@ -197,15 +196,15 @@ class Application(ttk.Frame):
         for c in self.categories:
             r = 0
             for k in c.keynotes:
-                kn = ttk.Label(c.tab, text=k.identifier())
+                kn = ttk.Label(c.catWidget, text=k.identifier())
                 kn.grid(row=r, column=0, padx=10)
                 lines = len(k.text) / 60 + 2
-                kt = tk.Text(c.tab, wrap=tk.WORD,
+                kt = tk.Text(c.catWidget, wrap=tk.WORD,
                              height=lines, width=60)
                 kt.insert(tk.END, k.text)  # use .get to access the text
                 kt.grid(row=r, column=1, pady=2)
                 k.textWidget = kt  # needed so we can access the text later
-                kd = ttk.Checkbutton(c.tab, variable=k.disabledVar,
+                kd = ttk.Checkbutton(c.catWidget, variable=k.disabledVar,
                                      command=k.toggleDisable)
                 kd.grid(row=r, column=2, padx=10)
                 r += 1
@@ -229,11 +228,8 @@ class Application(ttk.Frame):
         Populate the search tab with keynotes matching a search string.
         Executed as a callback from search button.
         """
+        found = False
         ss = self.searchString.get()
-        # Clear the search tab
-        # Develop the list of keynotes matching the string
-        # We probably don't want to build new widgets
-        # - maybe best to add a highlight to the ones that match
         if len(ss) < 2:
             error("Search string too short")
             return
@@ -242,14 +238,21 @@ class Application(ttk.Frame):
                 ktext = k.textWidget.get('0.0', tk.END)
                 if ktext.upper().count(self.searchString.get().upper()) > 0:
                     k.textWidget.config(bg='orange')
+                    found = True
                 else:
                     k.textWidget.config(bg='white')
+            if found:
+                self.tabs.add(c.catWidget)
+                found = False
+            else:
+                self.tabs.hide(c.catWidget)
 
     def clearKeynotes(self):
         """
         Remove color highlighting from the keynotes.
         """
         for c in self.categories:
+            self.tabs.add(c.catWidget)
             for k in c.keynotes:
                 k.textWidget.config(bg='white')
 
