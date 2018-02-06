@@ -152,7 +152,17 @@ class Application(ttk.Frame):
 
         # Build the notebook / tabs for each category of keynote
         cr += 1
-        self.tabs = ttk.Notebook(self)
+        # Make a scrollbar - still need to make window resizable
+        self.vsb = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.vsb.grid(row=cr, column=1, sticky=tk.N + tk.S)
+        # Make a canvas and link to scrollbar
+        self.canvas = tk.Canvas(self, width=600, height=600,
+                                yscrollcommand=self.vsb.set)
+        self.canvas.grid(row=cr, column=0)
+        # link the scrollbar back to the canvas
+        self.vsb.config(command=self.canvas.yview)
+        # Make the notebook
+        self.tabs = ttk.Notebook(self.canvas)
         self.tabs.grid(row=cr, column=0, columnspan=2)
 
     def readCategories(self, f):
