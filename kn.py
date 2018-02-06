@@ -211,7 +211,10 @@ class Application(ttk.Frame):
         for c in self.categories:
             r = 0
             for k in c.keynotes:
-                kn = ttk.Label(c.catWidget, text=k.identifier())
+                id = k.identifier()
+                i = ['D', 'E', 'N'].index(id[0])
+                color = ['red', 'black', 'green'][i]
+                kn = ttk.Label(c.catWidget, foreground=color, text=id)
                 kn.grid(row=r, column=0, padx=10)
                 lines = len(k.text) / 60 + 2
                 kt = tk.Text(c.catWidget, wrap=tk.WORD,
