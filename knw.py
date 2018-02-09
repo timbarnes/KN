@@ -91,9 +91,10 @@ class Application(wx.Frame):
         self.keynotes = []
         self.buildGUI()
         try:
-            self.loadKeynotes(self.keynote_file)
-        except Exception:
+            self.loadKeynotes()
+        except Exception as e:
             self.error("Unable to load keynote file {}".format(self.keynote_file))
+            print(e)
 
     def buildGUI(self):
         """
@@ -276,7 +277,7 @@ class Application(wx.Frame):
         Load in a file full of keynotes and build the GUI.
         """
         with open(self.keynote_file, "r") as f:
-            self.label1.config(text=self.keynote_file)
+            self.msg(self.keynote_file)
             cats = self.readCategories(f)
             print("{} categories found.".format(len(cats)))
             for c in cats:
