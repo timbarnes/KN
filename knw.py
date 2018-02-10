@@ -8,7 +8,7 @@ import wx
 
 class Keynote(object):
     """
-    Information for a single keynote
+    Information for a single keynote. Represented by a BoxSizer.
     """
 
     def __init__(self, line, category):
@@ -23,7 +23,7 @@ class Keynote(object):
         self.num = int(line[3:6])
         self.category = category  # Zero-based categories
         ll = line.split('\t')  # Split at tabs
-        print(ll)
+        # print(ll)
         self.text = ll[1]
         self.kt = None  # Will be filled in when the widget is made
         if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
@@ -64,21 +64,15 @@ class Category(wx.Panel):
         Create category, widget and stringVar
         """
         print("Creating category {}".format(name))
-        wx.Panel.__init__(self, parent)
         self.name = name
         self.num = num
         self.keynotes = []
-        s = wx.BoxSizer(wx.VERTICAL)
-        s.Add(wx.StaticText(self, -1, 'Demolition'), 0, wx.ALL, 8)
-        s.Add(wx.StaticText(self, -1, 'Existing'), 0, wx.ALL, 8)
-        s.Add(wx.StaticText(self, -1, 'New'), 0, wx.ALL, 8)
-        self.SetSizer(s)
 
     def addKeynote(self, keynote):
         self.keynotes.append(keynote)
 
     def __str__(self):
-        return "Category({} / {})".format(self.name, self.num)
+        return "Category({}, {})".format(self.name, self.num)
 
 
 class Application(wx.Frame):
@@ -95,11 +89,11 @@ class Application(wx.Frame):
         self.keynote_file = sys.argv[1]
         self.keynotes = []
         self.buildGUI()
-        try:
-            self.loadKeynotes()
-        except Exception as e:
-            self.error("Unable to load keynote file {}".format(self.keynote_file))
-            print(e)
+        # try:
+        self.loadKeynotes()
+        # except Exception as e:
+        # self.error("Unable to load keynote file {}".format(self.keynote_file))
+        # print(e)
 
     def buildGUI(self):
         """
@@ -113,10 +107,10 @@ class Application(wx.Frame):
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
-        self.tabs = wx.BoxSizer(wx.VERTICAL)
+        # self.tabs = wx.BoxSizer(wx.VERTICAL)
         # Add the inner sizers to the mainBox
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
-        self.mainBox.Add(self.tabs, 1, wx.EXPAND, 0)
+        # self.mainBox.Add(self.tabs, 1, wx.EXPAND, 0)
         # Create the search box and save button(s)
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.sString = wx.TextCtrl(self.panel)
@@ -128,59 +122,8 @@ class Application(wx.Frame):
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
         # Create the notebook for Categories
         self.categoryNotebook = wx.Notebook(self.panel)
-        self.tabs.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
+        self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
         #
-        # cr = 0  # current row
-        # self.topFrame = ttk.Frame(self, borderwidth=4)
-        # self.topFrame.grid(row=cr, column=0)
-        # self.label1 = ttk.Label(self.topFrame, text=self.keynote_file,
-        #                         justify='right')
-        # self.label1.grid(row=cr, column=0, padx=10)
-        # self.saveButton = ttk.Button(
-        #     self.topFrame, text='Save', width=12,
-        #     command=self.saveKeynotes)
-        # self.saveButton.grid(column=2, row=cr)
-        # cr += 1
-        # self.searchString = tk.StringVar()
-        # self.searchEntry = ttk.Entry(
-        #     self.topFrame, textvariable=self.searchString)
-        # self.searchEntry.grid(row=cr, column=0)
-        # self.searchButton = ttk.Button(
-        #     self.topFrame, text='Search', width=12,
-        #     command=self.searchKeynotes)
-        # self.searchButton.grid(column=1, row=cr)
-        # self.clearButton = ttk.Button(
-        #     self.topFrame, text='Clear', width=12,
-        #     command=self.clearKeynotes)
-        # self.clearButton.grid(column=2, row=cr)
-        # cr += 1
-        # self.addDButton = ttk.Button(
-        #     self.topFrame, text='Add Demo', width=12,
-        #     command=functools.partial(self.addKeynote, 'Demo'))
-        # self.addDButton.grid(column=0, row=cr)
-        # self.addEButton = ttk.Button(
-        #     self.topFrame, text='Add Existing', width=12,
-        #     command=functools.partial(self.addKeynote, 'Existing'))
-        # self.addEButton.grid(column=1, row=cr)
-        # self.addNButton = ttk.Button(
-        #     self.topFrame, text='Add New', width=12,
-        #     command=functools.partial(self.addKeynote, 'New'))
-        # self.addNButton.grid(column=2, row=cr)
-        #
-        # # Build the notebook / tabs for each category of keynote
-        # cr += 1
-        # # Make a scrollbar - still need to make window resizable
-        # self.vsb = tk.Scrollbar(self, orient=tk.VERTICAL)
-        # self.vsb.grid(row=cr, column=1, sticky=tk.N + tk.S)
-        # # Make a canvas and link to scrollbar
-        # self.canvas = tk.Canvas(self, width=600, height=600,
-        #                         yscrollcommand=self.vsb.set)
-        # self.canvas.grid(row=cr, column=0)
-        # # link the scrollbar back to the canvas
-        # self.vsb.config(command=self.canvas.yview)
-        # # Make the notebook
-        # self.tabs = ttk.Notebook(self.canvas)
-        # self.tabs.grid(row=cr, column=0, columnspan=2)
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
 
@@ -209,7 +152,6 @@ class Application(wx.Frame):
                 # print('Creating category: {}/{}'.format(ll, n))
                 c = Category(self.categoryNotebook, ll, n)
                 print(c)
-                self.categoryNotebook.AddPage(c, ll)
                 self.categories.append(c)  # Make a new one
                 n += 1
         return self.categories
@@ -232,42 +174,37 @@ class Application(wx.Frame):
             ll = f.readline()
         return len(category.keynotes)
 
-    def buildCategories(self):
+    def buildEditor(self):
         """
-        Build the tabs and populate with keynotes; add to the main frame.
+        Create the widgets for keynotes under category tabs in the notebook
         """
-        pass
-        # cats = self.categories
-        # if not cats:
-        #     error("No categories found.")
-        #     return 0
-        # for c in cats:
-        #     fr = wx.Frame()
-        #     c.catWidget = fr  # Save the tab in the category
-        #     self.tabs.Add(fr, text=c.name)  # Put it in the frame
-
-    def buildKeynotes(self):
-        """
-        Create the widgets for keynotes
-        """
+        nb = self.categoryNotebook
         for c in self.categories:
-            r = 0
+            print(c)
+            # Create a new page (frame)
+            cPageFrame = wx.Panel(nb, c.num)
+            # Add it to the notebook
+            nb.AddPage(cPageFrame, c.name)
+            # Make a sizer for the notebook page
+            cSizer = wx.BoxSizer(wx.VERTICAL)
+            # Build the keynote entries and add to the notebook page sizer
             for k in c.keynotes:
+                print(k)
+                kSizer = wx.BoxSizer(wx.HORIZONTAL)
                 id = k.identifier()
                 i = ['D', 'E', 'N'].index(id[0])
-                color = ['red', 'black', 'green'][i]
-                kn = ttk.Label(c.catWidget, foreground=color, text=id)
-                kn.grid(row=r, column=0, padx=10)
-                lines = len(k.text) / 60 + 2
-                kt = tk.Text(c.catWidget, wrap=tk.WORD,
-                             height=lines, width=60)
-                kt.insert(tk.END, k.text)  # use .get to access the text
-                kt.grid(row=r, column=1, pady=2)
-                k.textWidget = kt  # needed so we can access the text later
-                kd = ttk.Checkbutton(c.catWidget, variable=k.disabledVar,
-                                     command=k.toggleDisable)
-                kd.grid(row=r, column=2, padx=10)
-                r += 1
+                color = [(255, 0, 0), (0, 0, 0), (0, 255, 0)][i]
+                kn = wx.StaticText(cPageFrame, label=id)
+                kn.SetForegroundColour(color)
+                kt = wx.TextCtrl(cPageFrame, value=k.text)
+                kd = wx.CheckBox(cPageFrame, label='Disabled')
+                kSizer.Add(kn, 0, wx.ALL, 3)
+                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
+                kSizer.Add(kd, 0, wx.ALL, 3)
+                cSizer.Add(kSizer, 1, wx.EXPAND | wx.ALL, 2)
+            cPageFrame.SetSizer(cSizer)
+            # Add the BoxSizer to the page
+            # print(page.sizer)
 
     def addKeynote(self, ktype):
         """
@@ -301,8 +238,7 @@ class Application(wx.Frame):
             for c in cats:
                 kns = self.readKeynotes(f, c)
                 print("Category {}: {} keynotes found.".format(c.name, kns))
-        self.buildCategories()
-        self.buildKeynotes()
+        self.buildEditor()
 
     def searchKeynotes(self):
         """
