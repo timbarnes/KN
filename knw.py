@@ -258,7 +258,10 @@ class Application(wx.Frame):
                 kn.SetMinSize(wx.Size(50, 20))
                 kt = wx.TextCtrl(cPageFrame,
                                  style=wx.TE_MULTILINE, value=k.text)
+                if k.disabled:
+                    kt.SetBackgroundColour((180, 180, 180))
                 kd = wx.CheckBox(cPageFrame, label='Exclude')
+                kd.SetValue(k.disabled)
                 kSizer.Add(kn, 0, wx.ALL, 3)
                 kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
                 kSizer.Add(kd, 0, wx.ALL, 3)
