@@ -16,7 +16,7 @@ class Keynote(object):
         Build a Keynote from a line in the file, attach to a category.
         """
         if not line[0] in 'DEN':
-            error("Bad first character: <{}>".format(line))
+            print("Bad first character: <{}>".format(line))
         self.den = line[0]   # First character is D, E, or N
         self.catnum = int(line[1:3])  # Category Number
         # print(self.catnum)
@@ -26,13 +26,12 @@ class Keynote(object):
         print(ll)
         self.text = ll[1]
         self.kt = None  # Will be filled in when the widget is made
-        self.disabledVar = tk.BooleanVar()
         if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
-            self.disabledVar.set(True)
+            self.disabled = True
         else:
-            self.disabledVar.set(False)
+            self.disabled = False
             if self.catnum != category.num:
-                error("Category mismatch: {} / {}".format(self.catnum,
+                print("Category mismatch: {} / {}".format(self.catnum,
                                                           category.num))
 
     def identifier(self):
@@ -55,19 +54,25 @@ class Keynote(object):
                                         self.category.__str__())
 
 
-class Category(object):
+class Category(wx.Panel):
     """
-    Information for a specific category.
+    Information for a specific category. A Category is a wx.Panel.
     """
 
-    def __init__(self, name, num):
+    def __init__(self, parent, name, num=99):
         """
         Create category, widget and stringVar
         """
+        print("Creating category {}".format(name))
+        wx.Panel.__init__(self, parent)
         self.name = name
         self.num = num
         self.keynotes = []
-        self.catWidget = None  # The tab, so we can tweak it's label
+        s = wx.BoxSizer(wx.VERTICAL)
+        s.Add(wx.StaticText(self, -1, 'Demolition'), 0, wx.ALL, 8)
+        s.Add(wx.StaticText(self, -1, 'Existing'), 0, wx.ALL, 8)
+        s.Add(wx.StaticText(self, -1, 'New'), 0, wx.ALL, 8)
+        self.SetSizer(s)
 
     def addKeynote(self, keynote):
         self.keynotes.append(keynote)
@@ -107,11 +112,23 @@ class Application(wx.Frame):
         self.sb.SetStatusText("Simple keynote editor")
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
-        self.commands = wx.FlexGridSizer(3, 2, 9, 25)
+        self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.tabs = wx.BoxSizer(wx.VERTICAL)
         # Add the inner sizers to the mainBox
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
         self.mainBox.Add(self.tabs, 1, wx.EXPAND, 0)
+        # Create the search box and save button(s)
+        sPrompt = wx.StaticText(self.panel, label="Search:")
+        self.sString = wx.TextCtrl(self.panel)
+        self.saveText = wx.Button(self.panel, label="Save .txt")
+        self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
+        self.commands.Add(sPrompt, 0, wx.ALL, 8)
+        self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
+        self.commands.Add(self.saveText, 0, wx.ALL, 8)
+        self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
+        # Create the notebook for Categories
+        self.categoryNotebook = wx.Notebook(self.panel)
+        self.tabs.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
         #
         # cr = 0  # current row
         # self.topFrame = ttk.Frame(self, borderwidth=4)
@@ -190,8 +207,9 @@ class Application(wx.Frame):
                 break
             else:
                 # print('Creating category: {}/{}'.format(ll, n))
-                c = Category(ll, n)
+                c = Category(self.categoryNotebook, ll, n)
                 print(c)
+                self.categoryNotebook.AddPage(c, ll)
                 self.categories.append(c)  # Make a new one
                 n += 1
         return self.categories
@@ -218,15 +236,15 @@ class Application(wx.Frame):
         """
         Build the tabs and populate with keynotes; add to the main frame.
         """
-        cats = self.categories
-        if not cats:
-            error("No categories found.")
-            return 0
-        for c in cats:
-            fr = ttk.Frame()
-            fr.grid()
-            c.catWidget = fr  # Save the tab in the category
-            self.tabs.add(fr, text=c.name)  # Put it in the frame
+        pass
+        # cats = self.categories
+        # if not cats:
+        #     error("No categories found.")
+        #     return 0
+        # for c in cats:
+        #     fr = wx.Frame()
+        #     c.catWidget = fr  # Save the tab in the category
+        #     self.tabs.Add(fr, text=c.name)  # Put it in the frame
 
     def buildKeynotes(self):
         """
