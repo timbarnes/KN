@@ -15,6 +15,7 @@ class Keynote(object):
         """
         Build a Keynote from a line in the file, attach to a category.
         """
+        self.numberWidget = None
         self.textWidget = None
         self.disabledWidget = None
         if not line[0] in 'DEN':
@@ -46,10 +47,21 @@ class Keynote(object):
             return "{}\t{}\t{}".format(self.identifier(),
                                        self.text, self.category.num)
 
-    def toggleDisable(self):
-        if self.disabledVar.get():
-            # Should gray out the text field
-            pass
+    def hide(self):
+        """
+        Hide the GUI elements of a widget.
+        """
+        self.numberWidget.Hide()
+        self.textWidget.Hide()
+        self.disabledWidget.Hide()
+
+    def unHide(self):
+        """
+        Hide the GUI elements of a widget.
+        """
+        self.numberWidget.Show()
+        self.textWidget.Show()
+        self.disabledWidget.Show()
 
     def Destroy(self):
         if self.textWidget:
@@ -124,9 +136,10 @@ class Application(wx.Frame):
         # Create the search box and save button(s)
         self.loadText = wx.Button(self.panel, label="Load keynotes:")
         self.loadText.Bind(wx.EVT_BUTTON, self.onOpen)
-        sPrompt = wx.StaticText(self.panel, label="Search:")
+        sPrompt = wx.StaticText(self.panel, label="Filter:")
         self.sString = wx.TextCtrl(self.panel)
         self.sString.SetMinSize(wx.Size(50, 20))
+        self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilter)
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.saveText.Bind(wx.EVT_BUTTON, self.onSave)
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
@@ -153,6 +166,34 @@ class Application(wx.Frame):
         Print an error.
         """
         self.msg("Error: {}".format(message))
+
+    def onFilter(self, event):
+        """
+        Hide keynotes that don't match a search string.
+        """
+        if event.GetKeyCode() == wx.WXK_RETURN:
+            found = False
+            ss = event.GetEventObject().GetValue()
+            if ss == '':  # Show everything
+                for c in self.categories:
+                    for k in c.keynotes:
+                        k.unHide()
+                return
+            for c in self.categories:
+                for k in c.keynotes:
+                    ktext = k.textWidget.GetValue()
+                    if ktext.upper().count(ss.upper()) > 0:
+                        found = True
+                        k.unHide()
+                    else:
+                        k.hide()
+        else:
+            event.Skip()
+            # if found:
+            #     self.tabs.add(c.catWidget)
+            #     found = False
+            # else:
+            #     self.tabs.hide(c.catWidget)
 
     def onOpen(self, event):
         """
@@ -240,9 +281,8 @@ class Application(wx.Frame):
 
         for c in self.categories:
             print(c)
-            # Create a new page (frame)
+            # Create a new page (frame), add it to the notebook
             cPageFrame = wx.Panel(nb, c.num)
-            # Add it to the notebook
             nb.AddPage(cPageFrame, c.name)
             # Make a sizer for the notebook page
             cSizer = wx.BoxSizer(wx.VERTICAL)
@@ -258,14 +298,13 @@ class Application(wx.Frame):
                 kn.SetMinSize(wx.Size(50, 20))
                 kt = wx.TextCtrl(cPageFrame,
                                  style=wx.TE_MULTILINE, value=k.text)
-                if k.disabled:
-                    kt.SetBackgroundColour((180, 180, 180))
                 kd = wx.CheckBox(cPageFrame, label='Exclude')
                 kd.SetValue(k.disabled)
                 kSizer.Add(kn, 0, wx.ALL, 3)
                 kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
                 kSizer.Add(kd, 0, wx.ALL, 3)
                 cSizer.Add(kSizer, 1, wx.EXPAND | wx.ALL, 0)
+                k.numberWidget = kn
                 k.textWidget = kt
                 k.disabledWidget = kd
             cPageFrame.SetSizer(cSizer)
@@ -314,30 +353,6 @@ class Application(wx.Frame):
                 kns = self.readKeynotes(f, c)
                 print("Category {}: {} keynotes found.".format(c.name, kns))
         self.buildEditor()
-
-    def searchKeynotes(self):
-        """
-        Populate the search tab with keynotes matching a search string.
-        Executed as a callback from search button.
-        """
-        found = False
-        ss = self.searchString.get()
-        if len(ss) < 2:
-            self.error("Search string too short")
-            return
-        for c in self.categories:
-            for k in c.keynotes:
-                ktext = k.textWidget.get('0.0', tk.END)
-                if ktext.upper().count(self.searchString.get().upper()) > 0:
-                    k.textWidget.config(bg='orange')
-                    found = True
-                else:
-                    k.textWidget.config(bg='white')
-            if found:
-                self.tabs.add(c.catWidget)
-                found = False
-            else:
-                self.tabs.hide(c.catWidget)
 
     def clearKeynotes(self):
         """
