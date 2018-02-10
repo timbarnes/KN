@@ -1,7 +1,8 @@
 General
 
-D0001	Demo 1	General
-D0002	Demo 2 zz	General
-E0001	Existing 1 don't touch	General
-E0002	Existing 2	General
-N0001	New 1	General
+D0001	Demo 1	0
+D0002	Demo 2 zzx zz. This is going to be a longer line, with several bits of new stuff. And not active.
+E0001	Existing 1 don't touch	0
+E0002	Existing 2	0
+N0001	New 1	0
+

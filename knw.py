@@ -15,6 +15,8 @@ class Keynote(object):
         """
         Build a Keynote from a line in the file, attach to a category.
         """
+        self.textWidget = None
+        self.disabledWidget = None
         if not line[0] in 'DEN':
             print("Bad first character: <{}>".format(line))
         self.den = line[0]   # First character is D, E, or N
@@ -38,16 +40,22 @@ class Keynote(object):
         return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
 
     def fullstring(self):
-        if self.disabledVar.get():
+        if self.disabled:
             return "{}\t{}".format(self.identifier(), self.text)
         else:
             return "{}\t{}\t{}".format(self.identifier(),
-                                       self.text, self.category.name)
+                                       self.text, self.category.num)
 
     def toggleDisable(self):
         if self.disabledVar.get():
             # Should gray out the text field
             pass
+
+    def Destroy(self):
+        if self.textWidget:
+            self.textWidget.Destroy()
+        if self.disabledWidget:
+            self.disabledWidget.Destroy()
 
     def __str__(self):
         return "Keynote({}, {})".format(self.identifier(),
@@ -71,6 +79,10 @@ class Category(wx.Panel):
     def addKeynote(self, keynote):
         self.keynotes.append(keynote)
 
+    def Destroy(self):
+        for k in self.keynotes:
+            k.Destroy()
+
     def __str__(self):
         return "Category({}, {})".format(self.name, self.num)
 
@@ -83,16 +95,16 @@ class Application(wx.Frame):
     def __init__(self, *args, **kwargs):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
-                          'Edit Keynotes', size=(400, 500))
+                          'Edit Keynotes', size=(500, 500))
         # Create the communicating variables
         self.categories = []
-        self.keynote_file = sys.argv[1]
+        self.keynoteFile = ''
         self.keynotes = []
         self.buildGUI()
         # try:
-        self.loadKeynotes()
+        # self.loadKeynotes()
         # except Exception as e:
-        # self.error("Unable to load keynote file {}".format(self.keynote_file))
+        # self.error("Unable to load keynote file {}".format(self.keynoteFile))
         # print(e)
 
     def buildGUI(self):
@@ -107,15 +119,18 @@ class Application(wx.Frame):
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
-        # self.tabs = wx.BoxSizer(wx.VERTICAL)
         # Add the inner sizers to the mainBox
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
-        # self.mainBox.Add(self.tabs, 1, wx.EXPAND, 0)
         # Create the search box and save button(s)
+        self.loadText = wx.Button(self.panel, label="Load keynotes:")
+        self.loadText.Bind(wx.EVT_BUTTON, self.onOpen)
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.sString = wx.TextCtrl(self.panel)
+        self.sString.SetMinSize(wx.Size(50, 20))
         self.saveText = wx.Button(self.panel, label="Save .txt")
+        self.saveText.Bind(wx.EVT_BUTTON, self.onSave)
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
+        self.commands.Add(self.loadText, 0, wx.ALL, 8)
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
@@ -129,15 +144,55 @@ class Application(wx.Frame):
 
     def msg(self, message):
         """
-        Simple popup message box.
+        Display in Status area.
         """
         self.sb.SetStatusText(message)
 
     def error(self, message):
         """
-        Print an error to a pop-up.
+        Print an error.
         """
         self.msg("Error: {}".format(message))
+
+    def onOpen(self, event):
+        """
+        Open a keynote file.
+        """
+        with wx.FileDialog(self, "Open keynote text file",
+                           wildcard="txt files (*.txt|*.txt",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) \
+                as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            self.keynoteFile = fileDialog.GetPath()
+            try:
+                self.loadKeynotes()
+            except IOError:
+                self.error("Unable to load file {}".format(self.keynoteFile))
+
+    def onSave(self, event):
+        """
+        Write out the keynotes file.
+        """
+        self.msg("Saving file {}".format(self.keynoteFile))
+        # Move the old file before overwriting
+        os.rename(self.keynoteFile, self.keynoteFile + '~')
+        with open(self.keynoteFile, 'w+') as f:
+            for c in self.categories:
+                f.write(c.name)
+                f.write('\n')
+                print(c.name)
+            f.write('\n')  # A blank line
+            nb = self.categoryNotebook
+            for c in self.categories:
+                for k in c.keynotes:
+                    # Extract the text and disabled status
+                    k.text = k.textWidget.GetValue()
+                    k.disabled = k.disabledWidget.GetValue()
+                    f.write(k.fullstring())
+                    f.write('\n')
+                    print(k.fullstring())
+                f.write('\n')  # A blank line
 
     def readCategories(self, f):
         """
@@ -179,6 +234,10 @@ class Application(wx.Frame):
         Create the widgets for keynotes under category tabs in the notebook
         """
         nb = self.categoryNotebook
+        # If there was a file loaded, delete its pages and widgets
+        while nb.GetPageCount():
+            nb.DeletePage(0)
+
         for c in self.categories:
             print(c)
             # Create a new page (frame)
@@ -193,16 +252,21 @@ class Application(wx.Frame):
                 kSizer = wx.BoxSizer(wx.HORIZONTAL)
                 id = k.identifier()
                 i = ['D', 'E', 'N'].index(id[0])
-                color = [(255, 0, 0), (0, 0, 0), (0, 255, 0)][i]
+                color = [(180, 0, 0), (0, 0, 0), (0, 150, 0)][i]
                 kn = wx.StaticText(cPageFrame, label=id)
                 kn.SetForegroundColour(color)
-                kt = wx.TextCtrl(cPageFrame, value=k.text)
-                kd = wx.CheckBox(cPageFrame, label='Disabled')
+                kn.SetMinSize(wx.Size(50, 20))
+                kt = wx.TextCtrl(cPageFrame,
+                                 style=wx.TE_MULTILINE, value=k.text)
+                kd = wx.CheckBox(cPageFrame, label='Exclude')
                 kSizer.Add(kn, 0, wx.ALL, 3)
                 kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
                 kSizer.Add(kd, 0, wx.ALL, 3)
-                cSizer.Add(kSizer, 1, wx.EXPAND | wx.ALL, 2)
+                cSizer.Add(kSizer, 1, wx.EXPAND | wx.ALL, 0)
+                k.textWidget = kt
+                k.disabledWidget = kd
             cPageFrame.SetSizer(cSizer)
+            cPageFrame.Layout()
             # Add the BoxSizer to the page
             # print(page.sizer)
 
@@ -231,8 +295,16 @@ class Application(wx.Frame):
         """
         Load in a file full of keynotes and build the GUI.
         """
-        with open(self.keynote_file, "r") as f:
-            self.msg(self.keynote_file)
+        # Clear out any existing categories or keynotes
+        for c in self.categories:
+            for k in c.keynotes:
+                k.Destroy()
+            c.Destroy()
+        self.categories = []
+        self.keynotes = []
+        # Load in the new stuff
+        with open(self.keynoteFile, "r") as f:
+            self.msg(self.keynoteFile)
             cats = self.readCategories(f)
             print("{} categories found.".format(len(cats)))
             for c in cats:
@@ -273,41 +345,20 @@ class Application(wx.Frame):
             for k in c.keynotes:
                 k.textWidget.config(bg='white')
 
-    def saveKeynotes(self):
-        """
-        Write out the keynotes file.
-        """
-        print("Saving file {}".format(self.keynote_file))
-        # Move the old file before overwriting
-        os.rename(self.keynote_file, self.keynote_file + '~')
-        with open(self.keynote_file, 'w+') as f:
-            for c in self.categories:
-                f.write(c.name)
-                f.write('\n')
-                print(c.name)
-            f.write('\n')  # A blank line
-            for c in self.categories:
-                for k in c.keynotes:
-                    k.text = k.textWidget.get('1.0', tk.END)[:-1]
-                    f.write(k.fullstring())
-                    f.write('\n')
-                    print(k.fullstring())
-                f.write('\n')  # A blank line
-
 
 def main():
     """
     Top level function processes arguments and runs the app.
     """
     # Create and run the application object
-    try:
-        keynote_file = sys.argv[1]
-    except IndexError:
-        self.error("Usage: python kn.py <keynote file>")
-        sys.exit()
+    # try:
+    #     keynoteFile = sys.argv[1]
+    # except IndexError:
+    #     self.error("Usage: python kn.py <keynote file>")
+    #     sys.exit()
     app = wx.App()
     frame = Application().Show()
-    app.keynote_file = keynote_file
+    # app.keynoteFile = keynoteFile
     # if app.loadKeynotes():
     #     print('Keynote file loaded successfully.')
     app.MainLoop()
