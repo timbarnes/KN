@@ -116,7 +116,7 @@ class Application(wx.Frame):
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
                 n = 0
-                for c in self.data:
+                for c in self.keynoteFile.categories:
                     self.categoryNotebook.EnableTab(n, True)
                     n += 1
                     for k in (c.demoKeynotes +
@@ -124,7 +124,7 @@ class Application(wx.Frame):
                         unHide(k)
                 return
             n = 0
-            for c in self.data:
+            for c in self.keynoteFile.categories:
                 found = False
                 for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
                     ktext = k.textWidget.GetValue()
@@ -157,7 +157,7 @@ class Application(wx.Frame):
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
-            # self.data is the input from the file, so build the GUI
+            # Data is stored in the keynoteFile record, so build the GUI
             self.msg("Loaded file data")
             self.buildEditor()
 
