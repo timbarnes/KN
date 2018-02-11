@@ -55,10 +55,23 @@ class Keynote(object):
     Information for a single keynote.
     """
 
-    def __init__(self, line, category):
+    def __init__(self, category, line=None, num=None, kType=None, note=None):
         """
         Build a Keynote from a line in the file, attach to a category.
+        Alternatively build from a number and category.
         """
+        if not line:
+            # Build from scratch using num and kType
+            self.den = kType  # D, E or N
+            self.catnum = category.num
+            self.num = num
+            if note:
+                self.text = note
+            else:
+                self.text = '<Empty>'
+            self.category = category
+            return
+        # We are building from a line in a file
         if not line[0] in 'DEN':
             print("Bad first character: <{}>".format(line))
         self.den = line[0]   # First character is D, E, or N
@@ -148,7 +161,7 @@ class keynoteFile(object):
             if ll == '':   # It's a blank line and the group is finished
                 break
             else:
-                kn = Keynote(ll, category)
+                kn = Keynote(category, ll)
                 # print('Found keynote: {}'.format(kn))
                 if kn.den == 'D':
                     demoKeynotes.append(kn)

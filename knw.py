@@ -10,7 +10,7 @@ class categoryPage(wx.Panel):
     A tab for a category
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, category):
         """
         Create a page record and add to the notebook
         """
@@ -18,10 +18,12 @@ class categoryPage(wx.Panel):
         self.demoRows = []
         self.existingRows = []
         self.newRows = []
+        self.category = category
         # Create the page
         wx.Panel.__init__(self, parent)
 
-
+    def GetPageName(self):
+        return self.category.name
 # class keynoteRow(wx.BoxSizer):
 #     """
 #     A number, text and checkbox for a keynote.
@@ -44,10 +46,9 @@ class Application(wx.Frame):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
                           'Edit Keynotes', size=(500, 500))
-        # Create the communicating variables
-        self.categories = []
-        self.keynoteFile = ''
-        self.keynotes = []
+        # We'll access notebook information from here
+        self.categoryNotebook = None
+        self.keynoteFile = None
         self.buildGUI()
 
     def buildGUI(self):
@@ -97,6 +98,8 @@ class Application(wx.Frame):
         # Create the notebook for Categories
         self.categoryNotebook = aui.AuiNotebook(self.panel)
         self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
+        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
+                                   self.onPageChanged)
         #
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
@@ -198,20 +201,50 @@ class Application(wx.Frame):
         """
         if self.keynoteFile:
             self.msg("Adding demo keynote")
+            self.addKeynote('D')
         else:
             self.error("Load keynote file first")
 
     def onAddExisting(self, event):
         if self.keynoteFile:
             self.msg("Adding existing keynote")
+            self.addKeynote('E')
         else:
             self.error("Load keynote file first")
 
     def onAddNew(self, event):
         if self.keynoteFile:
             self.msg("Adding new keynote")
+            self.addKeynote('N')
         else:
             self.error("Load keynote file first")
+
+    def onPageChanged(self, event):
+        """
+        Capture the new tab for later use.
+        """
+        val = event.GetEventObject()
+        val = val.GetCurrentPage()
+        self.currentCategory = val.category
+
+    def addKeynote(self, kType):
+        """
+        Add a keynote to the current category (page) of the specified type
+        """
+        category = self.currentCategory
+        if kType == 'D':
+            kList = category.demoKeynotes
+        elif kType == 'E':
+            kList = category.existingKeynotes
+        else:
+            kList = category.newKeynotes
+        # Get the next number for the correct keynote type
+        nextNum = len(kList)
+        # Make the keynote and append it to the appropriate list
+        k = knm.Keynote(category, num=nextNum, kType=kType)
+        kList.append(k)
+        print(k)
+        # Build the keynote widgets and add to the sizer
 
     def hideKeynote(self):
         """
@@ -263,7 +296,7 @@ class Application(wx.Frame):
         for c in self.keynoteFile.categories:  # Original data from the file
             print("Building category {}".format(c))  # A category
             # Create a new page (frame), add it to the notebook
-            page = categoryPage(notebook)  # Make the page
+            page = categoryPage(notebook, c)  # Make the page
             notebook.AddPage(page, c.name)
             c.pageWidget = page  # Save the page so we can turn it on and off
             # Make a sizer for the notebook page
@@ -280,27 +313,8 @@ class Application(wx.Frame):
                 pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
             page.SetSizer(pageSizer)
             page.Layout()
-
-    def addKeynote(self, ktype):
-        """
-        Add a new keynote in the current tab. Type is demo, existing or new.
-        Insert widget into the frame and re-add the elements below.
-        """
-        ctab = self.tabs.select()
-        cname = self.tabs.tab(ctab)['text']
-        for c in self.categories:
-            if c.name == cname:
-                # Make a new blank widget with the right Number
-                print("Adding a keynote to {}".format(cname))
-                if ktype == 'Demo':
-                    # Create a demo keynote
-                    pass
-                elif ktype == 'Existing':
-                    # Create an existing keynote
-                    pass
-                else:
-                    # Create a new keynote
-                    pass
+        # Save the current category (the first one created)
+        self.currentCategory = self.keynoteFile.categories[0]
 
     def clearKeynotes(self):
         """
