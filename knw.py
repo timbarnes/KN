@@ -102,22 +102,32 @@ class Application(wx.Frame):
         """
         Hide keynotes that don't match a search string.
         """
+        def hide(k):
+            k.numberWidget.Hide()
+            k.textWidget.Hide()
+            k.disabledWidget.Hide()
+
+        def unHide(k):
+            k.numberWidget.Show()
+            k.textWidget.Show()
+            k.disabledWidget.Show()
+
         if event.GetKeyCode() == wx.WXK_RETURN:
             found = False
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
                 for c in self.categories:
                     for k in c.keynotes:
-                        k.unHide()
+                        unHide(k)
                 return
-            for c in self.categories:
-                for k in c.keynotes:
+            for c in self.data:
+                for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
                     ktext = k.textWidget.GetValue()
                     if ktext.upper().count(ss.upper()) > 0:
                         found = True
-                        k.unHide()
+                        unHide(k)
                     else:
-                        k.hide()
+                        hide(k)
                 if not found:
                     # Hide the tab
                     pass
@@ -184,6 +194,28 @@ class Application(wx.Frame):
         """
         Create the widgets for keynotes under category tabs in the notebook
         """
+
+        def buildKeynote(page, k, color):
+            """Create a row for a keynote"""
+            print("Building keynote {}".format(k))
+            kSizer = wx.BoxSizer(wx.HORIZONTAL)
+            id = k.identifier()
+            kn = wx.StaticText(page, label=id)
+            kn.SetForegroundColour(color)
+            kn.SetMinSize(wx.Size(50, 20))
+            kt = wx.TextCtrl(page,
+                             style=wx.TE_MULTILINE, value=k.text)
+            kd = wx.CheckBox(page, label='Exclude')
+            kd.SetValue(k.disabled)
+            kSizer.Add(kn, 0, wx.ALL, 3)
+            kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
+            kSizer.Add(kd, 0, wx.ALL, 3)
+            # Store the widgets back into the data
+            k.numberWidget = kn
+            k.textWidget = kt
+            k.disabledWidget = kd
+            return kSizer
+
         notebook = self.categoryNotebook
         # If there was a file previously loaded, delete its pages and widgets
         while notebook.GetPageCount():
@@ -198,49 +230,13 @@ class Application(wx.Frame):
             pageSizer = wx.BoxSizer(wx.VERTICAL)
             # Build the keynote entries and add to the notebook page sizer
             for k in c.demoKeynotes:
-                print("Building keynote {}".format(k))
-                kSizer = wx.BoxSizer(wx.HORIZONTAL)
-                id = k.identifier()
-                kn = wx.StaticText(page, label=id)
-                kn.SetForegroundColour((180, 0, 0))
-                kn.SetMinSize(wx.Size(50, 20))
-                kt = wx.TextCtrl(page,
-                                 style=wx.TE_MULTILINE, value=k.text)
-                kd = wx.CheckBox(page, label='Exclude')
-                kd.SetValue(k.disabled)
-                kSizer.Add(kn, 0, wx.ALL, 3)
-                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
-                kSizer.Add(kd, 0, wx.ALL, 3)
+                kSizer = buildKeynote(page, k, (180, 0, 0))
                 pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
             for k in c.existingKeynotes:
-                print("Building keynote {}".format(k))
-                kSizer = wx.BoxSizer(wx.HORIZONTAL)
-                id = k.identifier()
-                kn = wx.StaticText(page, label=id)
-                kn.SetForegroundColour((0, 0, 0))
-                kn.SetMinSize(wx.Size(50, 20))
-                kt = wx.TextCtrl(page,
-                                 style=wx.TE_MULTILINE, value=k.text)
-                kd = wx.CheckBox(page, label='Exclude')
-                kd.SetValue(k.disabled)
-                kSizer.Add(kn, 0, wx.ALL, 3)
-                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
-                kSizer.Add(kd, 0, wx.ALL, 3)
+                kSizer = buildKeynote(page, k, (0, 0, 0))
                 pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
             for k in c.newKeynotes:
-                print("Building keynote {}".format(k))
-                kSizer = wx.BoxSizer(wx.HORIZONTAL)
-                id = k.identifier()
-                kn = wx.StaticText(page, label=id)
-                kn.SetForegroundColour((0, 150, 0))
-                kn.SetMinSize(wx.Size(50, 20))
-                kt = wx.TextCtrl(page,
-                                 style=wx.TE_MULTILINE, value=k.text)
-                kd = wx.CheckBox(page, label='Exclude')
-                kd.SetValue(k.disabled)
-                kSizer.Add(kn, 0, wx.ALL, 3)
-                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
-                kSizer.Add(kd, 0, wx.ALL, 3)
+                kSizer = buildKeynote(page, k, (0, 150, 0))
                 pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
             page.SetSizer(pageSizer)
             page.Layout()
