@@ -288,6 +288,16 @@ class Application(wx.Frame):
             k.disabledWidget = kd
             return kSizer
 
+        def buildKeynoteSet(page, keynotes, color):
+            """
+            Create a D, E, or N group
+            """
+            sizer = wx.BoxSizer(wx.VERTICAL)
+            for k in keynotes:
+                kSizer = buildKeynote(page, k, color)
+                sizer.Add(kSizer, 1, wx.EXPAND, 2)
+            return sizer
+
         notebook = self.categoryNotebook
         # If there was a file previously loaded, delete its pages and widgets
         while notebook.GetPageCount():
@@ -301,18 +311,20 @@ class Application(wx.Frame):
             c.pageWidget = page  # Save the page so we can turn it on and off
             # Make a sizer for the notebook page
             pageSizer = wx.BoxSizer(wx.VERTICAL)
-            # Build the keynote entries and add to the notebook page sizer
-            for k in c.demoKeynotes:
-                kSizer = buildKeynote(page, k, (180, 0, 0))
-                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
-            for k in c.existingKeynotes:
-                kSizer = buildKeynote(page, k, (0, 0, 0))
-                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
-            for k in c.newKeynotes:
-                kSizer = buildKeynote(page, k, (0, 150, 0))
-                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
+            # Build the keynote entries using three separate sizers
+            # Save the sizers into the category for later access
+            c.demoSizer = buildKeynoteSet(page,
+                                          c.demoKeynotes, (180, 0, 0))
+            c.existingSizer = buildKeynoteSet(page,
+                                              c.existingKeynotes, (0, 0, 0))
+            c.newSizer = buildKeynoteSet(page,
+                                         c.newKeynotes, (0, 150, 0))
+            pageSizer.Add(c.demoSizer, 1, wx.EXPAND, 0)
+            pageSizer.Add(c.existingSizer, 1, wx.EXPAND, 0)
+            pageSizer.Add(c.newSizer, 1, wx.EXPAND, 0)
+
             page.SetSizer(pageSizer)
-            page.Layout()
+            page.Fit()
         # Save the current category (the first one created)
         self.currentCategory = self.keynoteFile.categories[0]
 
