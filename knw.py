@@ -62,23 +62,38 @@ class Application(wx.Frame):
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
-        # Add the inner sizers to the mainBox
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
         # Create the search box and save button(s)
         self.loadText = wx.Button(self.panel, label="Load keynotes:")
         self.loadText.Bind(wx.EVT_BUTTON, self.onOpen)
+        self.commands.Add(self.loadText, 0, wx.ALL, 8)
         sPrompt = wx.StaticText(self.panel, label="Filter:")
+        self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
         self.sString.SetMinSize(wx.Size(50, 20))
+        self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
         self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilter)
         self.saveText = wx.Button(self.panel, label="Save .txt")
+        self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSave)
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
-        self.commands.Add(self.loadText, 0, wx.ALL, 8)
-        self.commands.Add(sPrompt, 0, wx.ALL, 8)
-        self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
-        self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
+        # Create the Add keynote sizer
+        self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
+        # Create the Add keynote buttons
+        aPrompt = wx.StaticText(self.panel, label="Insert new keynotes:")
+        self.addSizer.Add(aPrompt, 2, wx.EXPAND | wx.ALL, 8)
+        self.addDemo = wx.Button(self.panel, label="Add Demo")
+        self.addSizer.Add(self.addDemo, 0, wx.ALL, 8)
+        self.addDemo.Bind(wx.EVT_BUTTON, self.onAddDemo)
+        self.addExisting = wx.Button(self.panel, label="Add Existing")
+        self.addSizer.Add(self.addExisting, 0, wx.ALL, 8)
+        self.addExisting.Bind(wx.EVT_BUTTON, self.onAddExisting)
+        self.addNew = wx.Button(self.panel, label="Add New")
+        self.addSizer.Add(self.addNew, 0, wx.ALL, 8)
+        self.addNew.Bind(wx.EVT_BUTTON, self.onAddNew)
+
         # Create the notebook for Categories
         self.categoryNotebook = aui.AuiNotebook(self.panel)
         self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
@@ -176,6 +191,27 @@ class Application(wx.Frame):
         # Move the old file before overwriting
         r = self.keynoteFile.save()
         self.msg("Saved {} categories; {} keynotes".format(*r))
+
+    def onAddDemo(self, event):
+        """
+        Add a demo keynote to the current tab
+        """
+        if self.keynoteFile:
+            self.msg("Adding demo keynote")
+        else:
+            self.error("Load keynote file first")
+
+    def onAddExisting(self, event):
+        if self.keynoteFile:
+            self.msg("Adding existing keynote")
+        else:
+            self.error("Load keynote file first")
+
+    def onAddNew(self, event):
+        if self.keynoteFile:
+            self.msg("Adding new keynote")
+        else:
+            self.error("Load keynote file first")
 
     def hideKeynote(self):
         """
