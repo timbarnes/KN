@@ -116,8 +116,8 @@ class Application(wx.Frame):
             found = False
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
-                for c in self.categories:
-                    for k in c.keynotes:
+                for c in self.data:
+                    for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
                         unHide(k)
                 return
             for c in self.data:
@@ -130,6 +130,7 @@ class Application(wx.Frame):
                         hide(k)
                 if not found:
                     # Hide the tab
+                    c.pageWidget.Hide()
                     pass
         else:
             event.Skip()
@@ -226,6 +227,7 @@ class Application(wx.Frame):
             # Create a new page (frame), add it to the notebook
             page = categoryPage(notebook)  # Make the page
             notebook.AddPage(page, c.name)
+            c.pageWidget = page  # Save the page so we can turn it on and off
             # Make a sizer for the notebook page
             pageSizer = wx.BoxSizer(wx.VERTICAL)
             # Build the keynote entries and add to the notebook page sizer
