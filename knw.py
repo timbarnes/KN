@@ -172,9 +172,10 @@ class Application(wx.Frame):
             # k.disabled = k.disabledWidget.GetValue()
             pass
 
-        self.msg("Saving file {}".format(self.keynoteFile))
+        self.msg("Saving file {}".format(self.keynoteFile.fileName))
         # Move the old file before overwriting
-        self.keynoteFile.save()
+        r = self.keynoteFile.save()
+        self.msg("Saved {} categories; {} keynotes".format(*r))
 
     def hideKeynote(self):
         """

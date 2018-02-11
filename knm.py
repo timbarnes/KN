@@ -157,6 +157,7 @@ class keynoteFile(object):
                 else:
                     newKeynotes.append(kn)
             ll = f.readline()
+        self.pprint()
         return (demoKeynotes, existingKeynotes, newKeynotes)
 
     def save(self):
@@ -164,23 +165,42 @@ class keynoteFile(object):
         Write out the keynote data in the record.
         Assumes any updates to the record have already been made.
         """
+        self.pprint()
         # Create a backup copy of the file
         os.rename(self.fileName, self.fileName + '~')
         with open(self.fileName, 'w+') as f:
+            cCount = 0
+            kCount = 0
             for c in self.categories:
                 f.write(c.name)
                 f.write('\n')
-                print(c.name)
+                cCount += 1
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.demoKeynotes:
                     f.write(k.fullstring())
                     f.write('\n')
+                    kCount += 1
                 for k in c.existingKeynotes:
                     f.write(k.fullstring())
                     f.write('\n')
+                    kCount += 1
                 for k in c.newKeynotes:
                     f.write(k.fullstring())
                     f.write('\n')
-                    print(k.fullstring())
+                    kCount += 1
                 f.write('\n')  # A blank line
+            return (cCount, kCount)
+
+    def pprint(self):
+        """
+        Print a human readable version of the keynoteFile record.
+        """
+        for c in self.categories:
+            print(c)
+            for k in c.demoKeynotes:
+                print("- {}".format(k.fullstring()))
+            for k in c.existingKeynotes:
+                print("- {}".format(k.fullstring()))
+            for k in c.newKeynotes:
+                print("- {}".format(k.fullstring()))
