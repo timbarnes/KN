@@ -1,102 +1,38 @@
 import os
-import sys
-import functools
 import wx
+import knm
 
-# wxPython version
+# wxPython version refactored
 
 
-class Keynote(object):
+class categoryPage(wx.Panel):
     """
-    Information for a single keynote. Represented by a BoxSizer.
-    """
-
-    def __init__(self, line, category):
-        """
-        Build a Keynote from a line in the file, attach to a category.
-        """
-        self.numberWidget = None
-        self.textWidget = None
-        self.disabledWidget = None
-        if not line[0] in 'DEN':
-            print("Bad first character: <{}>".format(line))
-        self.den = line[0]   # First character is D, E, or N
-        self.catnum = int(line[1:3])  # Category Number
-        # print(self.catnum)
-        self.num = int(line[3:6])
-        self.category = category  # Zero-based categories
-        ll = line.split('\t')  # Split at tabs
-        # print(ll)
-        self.text = ll[1]
-        self.kt = None  # Will be filled in when the widget is made
-        if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
-            self.disabled = True
-        else:
-            self.disabled = False
-            if self.catnum != category.num:
-                print("Category mismatch: {} / {}".format(self.catnum,
-                                                          category.num))
-
-    def identifier(self):
-        return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
-
-    def fullstring(self):
-        if self.disabled:
-            return "{}\t{}".format(self.identifier(), self.text)
-        else:
-            return "{}\t{}\t{}".format(self.identifier(),
-                                       self.text, self.category.num)
-
-    def hide(self):
-        """
-        Hide the GUI elements of a widget.
-        """
-        self.numberWidget.Hide()
-        self.textWidget.Hide()
-        self.disabledWidget.Hide()
-
-    def unHide(self):
-        """
-        Hide the GUI elements of a widget.
-        """
-        self.numberWidget.Show()
-        self.textWidget.Show()
-        self.disabledWidget.Show()
-
-    def Destroy(self):
-        if self.textWidget:
-            self.textWidget.Destroy()
-        if self.disabledWidget:
-            self.disabledWidget.Destroy()
-
-    def __str__(self):
-        return "Keynote({}, {})".format(self.identifier(),
-                                        self.category.__str__())
-
-
-class Category(wx.Panel):
-    """
-    Information for a specific category. A Category is a wx.Panel.
+    A tab for a category
     """
 
-    def __init__(self, parent, name, num=99):
+    def __init__(self, parent):
         """
-        Create category, widget and stringVar
+        Create a page record and add to the notebook
         """
-        print("Creating category {}".format(name))
-        self.name = name
-        self.num = num
-        self.keynotes = []
+        # Store the keynote elements
+        self.demoRows = []
+        self.existingRows = []
+        self.newRows = []
+        # Create the page
+        wx.Panel.__init__(self, parent)
 
-    def addKeynote(self, keynote):
-        self.keynotes.append(keynote)
 
-    def Destroy(self):
-        for k in self.keynotes:
-            k.Destroy()
-
-    def __str__(self):
-        return "Category({}, {})".format(self.name, self.num)
+# class keynoteRow(wx.BoxSizer):
+#     """
+#     A number, text and checkbox for a keynote.
+#     """
+#
+#     def __init__(self, *args, **kwargs):
+#         self.keynote = {}
+#         self.keynote = kwargs.pop('keynote')
+#         print(self.keynote)
+#         wx.BoxSizer.__init__(self, *args, **kwargs)
+#         self.SetOrientation(wx.HORIZONTAL)
 
 
 class Application(wx.Frame):
@@ -113,11 +49,6 @@ class Application(wx.Frame):
         self.keynoteFile = ''
         self.keynotes = []
         self.buildGUI()
-        # try:
-        # self.loadKeynotes()
-        # except Exception as e:
-        # self.error("Unable to load keynote file {}".format(self.keynoteFile))
-        # print(e)
 
     def buildGUI(self):
         """
@@ -187,6 +118,9 @@ class Application(wx.Frame):
                         k.unHide()
                     else:
                         k.hide()
+                if not found:
+                    # Hide the tab
+                    pass
         else:
             event.Skip()
             # if found:
@@ -205,112 +139,111 @@ class Application(wx.Frame):
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
-            self.keynoteFile = fileDialog.GetPath()
+            self.keynoteFileName = fileDialog.GetPath()
+            self.keynoteFile = knm.keynoteFile()
             try:
-                self.loadKeynotes()
+                self.data = self.keynoteFile.load(self.keynoteFileName)
             except IOError:
                 self.error("Unable to load file {}".format(self.keynoteFile))
+            # self.data is the input from the file, so build the GUI
+            self.msg("Loaded file data")
+            self.buildEditor()
 
     def onSave(self, event):
         """
         Write out the keynotes file.
         """
+        # Create an updated knm.keynoteFile from the widgets
+        for c in self.data:
+            # Rebuild all the keynote Information
+            # k.text = k.textWidget.GetValue()
+            # k.disabled = k.disabledWidget.GetValue()
+            pass
+
         self.msg("Saving file {}".format(self.keynoteFile))
         # Move the old file before overwriting
-        os.rename(self.keynoteFile, self.keynoteFile + '~')
-        with open(self.keynoteFile, 'w+') as f:
-            for c in self.categories:
-                f.write(c.name)
-                f.write('\n')
-                print(c.name)
-            f.write('\n')  # A blank line
-            nb = self.categoryNotebook
-            for c in self.categories:
-                for k in c.keynotes:
-                    # Extract the text and disabled status
-                    k.text = k.textWidget.GetValue()
-                    k.disabled = k.disabledWidget.GetValue()
-                    f.write(k.fullstring())
-                    f.write('\n')
-                    print(k.fullstring())
-                f.write('\n')  # A blank line
+        knm.save(self.data, self.keynoteFile)
 
-    def readCategories(self, f):
+    def hideKeynote(self):
         """
-        Read the category list from a keynote file
+        Hide the GUI elements of a widget.
         """
-        n = 0
-        while True:
-            ll = f.readline().rstrip('\n')
-            if len(ll) == 0 or ll[0] in '# ':
-                break
-            else:
-                # print('Creating category: {}/{}'.format(ll, n))
-                c = Category(self.categoryNotebook, ll, n)
-                print(c)
-                self.categories.append(c)  # Make a new one
-                n += 1
-        return self.categories
+        self.numberWidget.Hide()
+        self.textWidget.Hide()
+        self.disabledWidget.Hide()
 
-    def readKeynotes(self, f, category):
+    def unHide(self):
         """
-        Read the keynotes from an open keynote file for one category.
-        Disabled keynotes don't have a 3rd entry;
-        Store them by category.
+        Hide the GUI elements of a widget.
         """
-        ll = f.readline()
-        while ll != '':    # Empty string signified end of file
-            ll = ll.rstrip(' \n')  # Remove leading/trailing newline or space
-            if ll == '':   # It's a blank line and the group is finished
-                break
-            else:
-                kn = Keynote(ll, category)
-                # print('Found keynote: {}'.format(kn))
-                category.keynotes.append(kn)
-            ll = f.readline()
-        return len(category.keynotes)
+        self.numberWidget.Show()
+        self.textWidget.Show()
+        self.disabledWidget.Show()
 
     def buildEditor(self):
         """
         Create the widgets for keynotes under category tabs in the notebook
         """
-        nb = self.categoryNotebook
-        # If there was a file loaded, delete its pages and widgets
-        while nb.GetPageCount():
-            nb.DeletePage(0)
+        notebook = self.categoryNotebook
+        # If there was a file previously loaded, delete its pages and widgets
+        while notebook.GetPageCount():
+            notebook.DeletePage(0)
 
-        for c in self.categories:
-            print(c)
+        for c in self.data:  # The original data from the file
+            print("Building category {}".format(c))  # A category
             # Create a new page (frame), add it to the notebook
-            cPageFrame = wx.Panel(nb, c.num)
-            nb.AddPage(cPageFrame, c.name)
+            page = categoryPage(notebook)  # Make the page
+            notebook.AddPage(page, c.name)
             # Make a sizer for the notebook page
-            cSizer = wx.BoxSizer(wx.VERTICAL)
+            pageSizer = wx.BoxSizer(wx.VERTICAL)
             # Build the keynote entries and add to the notebook page sizer
-            for k in c.keynotes:
-                print(k)
+            for k in c.demoKeynotes:
+                print("Building keynote {}".format(k))
                 kSizer = wx.BoxSizer(wx.HORIZONTAL)
                 id = k.identifier()
-                i = ['D', 'E', 'N'].index(id[0])
-                color = [(180, 0, 0), (0, 0, 0), (0, 150, 0)][i]
-                kn = wx.StaticText(cPageFrame, label=id)
-                kn.SetForegroundColour(color)
+                kn = wx.StaticText(page, label=id)
+                kn.SetForegroundColour((180, 0, 0))
                 kn.SetMinSize(wx.Size(50, 20))
-                kt = wx.TextCtrl(cPageFrame,
+                kt = wx.TextCtrl(page,
                                  style=wx.TE_MULTILINE, value=k.text)
-                kd = wx.CheckBox(cPageFrame, label='Exclude')
+                kd = wx.CheckBox(page, label='Exclude')
                 kd.SetValue(k.disabled)
                 kSizer.Add(kn, 0, wx.ALL, 3)
                 kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
                 kSizer.Add(kd, 0, wx.ALL, 3)
-                cSizer.Add(kSizer, 1, wx.EXPAND | wx.ALL, 0)
-                k.numberWidget = kn
-                k.textWidget = kt
-                k.disabledWidget = kd
-            cPageFrame.SetSizer(cSizer)
-            cPageFrame.Layout()
-            # Add the BoxSizer to the page
-            # print(page.sizer)
+                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
+            for k in c.existingKeynotes:
+                print("Building keynote {}".format(k))
+                kSizer = wx.BoxSizer(wx.HORIZONTAL)
+                id = k.identifier()
+                kn = wx.StaticText(page, label=id)
+                kn.SetForegroundColour((0, 0, 0))
+                kn.SetMinSize(wx.Size(50, 20))
+                kt = wx.TextCtrl(page,
+                                 style=wx.TE_MULTILINE, value=k.text)
+                kd = wx.CheckBox(page, label='Exclude')
+                kd.SetValue(k.disabled)
+                kSizer.Add(kn, 0, wx.ALL, 3)
+                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
+                kSizer.Add(kd, 0, wx.ALL, 3)
+                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
+            for k in c.newKeynotes:
+                print("Building keynote {}".format(k))
+                kSizer = wx.BoxSizer(wx.HORIZONTAL)
+                id = k.identifier()
+                kn = wx.StaticText(page, label=id)
+                kn.SetForegroundColour((0, 150, 0))
+                kn.SetMinSize(wx.Size(50, 20))
+                kt = wx.TextCtrl(page,
+                                 style=wx.TE_MULTILINE, value=k.text)
+                kd = wx.CheckBox(page, label='Exclude')
+                kd.SetValue(k.disabled)
+                kSizer.Add(kn, 0, wx.ALL, 3)
+                kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
+                kSizer.Add(kd, 0, wx.ALL, 3)
+                pageSizer.Add(kSizer, 1, wx.EXPAND, 2)
+            page.SetSizer(pageSizer)
+            page.Layout()
 
     def addKeynote(self, ktype):
         """
@@ -333,27 +266,6 @@ class Application(wx.Frame):
                     # Create a new keynote
                     pass
 
-    def loadKeynotes(self):
-        """
-        Load in a file full of keynotes and build the GUI.
-        """
-        # Clear out any existing categories or keynotes
-        for c in self.categories:
-            for k in c.keynotes:
-                k.Destroy()
-            c.Destroy()
-        self.categories = []
-        self.keynotes = []
-        # Load in the new stuff
-        with open(self.keynoteFile, "r") as f:
-            self.msg(self.keynoteFile)
-            cats = self.readCategories(f)
-            print("{} categories found.".format(len(cats)))
-            for c in cats:
-                kns = self.readKeynotes(f, c)
-                print("Category {}: {} keynotes found.".format(c.name, kns))
-        self.buildEditor()
-
     def clearKeynotes(self):
         """
         Remove color highlighting from the keynotes.
@@ -368,17 +280,8 @@ def main():
     """
     Top level function processes arguments and runs the app.
     """
-    # Create and run the application object
-    # try:
-    #     keynoteFile = sys.argv[1]
-    # except IndexError:
-    #     self.error("Usage: python kn.py <keynote file>")
-    #     sys.exit()
     app = wx.App()
-    frame = Application().Show()
-    # app.keynoteFile = keynoteFile
-    # if app.loadKeynotes():
-    #     print('Keynote file loaded successfully.')
+    Application().Show()
     app.MainLoop()
 
 
