@@ -308,7 +308,7 @@ class Application(wx.Frame):
             sizer = wx.BoxSizer(wx.VERTICAL)
             for k in keynotes:
                 kSizer = self.buildKeynote(page, k, color)
-                sizer.Add(kSizer, 1, wx.EXPAND, 2)
+                sizer.Add(kSizer, 0, wx.EXPAND, 2)
             return sizer
 
         notebook = self.categoryNotebook
@@ -332,9 +332,9 @@ class Application(wx.Frame):
                                               c.existingKeynotes, (0, 0, 0))
             c.newSizer = buildKeynoteSet(page,
                                          c.newKeynotes, (0, 150, 0))
-            pageSizer.Add(c.demoSizer, 1, wx.EXPAND, 0)
-            pageSizer.Add(c.existingSizer, 1, wx.EXPAND, 0)
-            pageSizer.Add(c.newSizer, 1, wx.EXPAND, 0)
+            pageSizer.Add(c.demoSizer, 0, wx.EXPAND, 0)
+            pageSizer.Add(c.existingSizer, 0, wx.EXPAND, 0)
+            pageSizer.Add(c.newSizer, 0, wx.EXPAND, 0)
 
             page.SetSizer(pageSizer)
             page.Fit()
