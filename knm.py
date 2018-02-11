@@ -69,6 +69,7 @@ class Keynote(object):
                 self.text = note
             else:
                 self.text = '<Empty>'
+            self.disabled = False
             self.category = category
             return
         # We are building from a line in a file

@@ -155,6 +155,8 @@ class Application(wx.Frame):
                     # Hide the tab
                     self.categoryNotebook.EnableTab(n, False)
                 n += 1
+                c.pageWidget.Layout()
+
         else:
             event.Skip()
 
@@ -234,17 +236,26 @@ class Application(wx.Frame):
         category = self.currentCategory
         if kType == 'D':
             kList = category.demoKeynotes
+            kSizer = category.demoSizer
+            kColor = (180, 0, 0)
         elif kType == 'E':
             kList = category.existingKeynotes
+            kSizer = category.existingSizer
+            kColor = (0, 0, 0)
         else:
             kList = category.newKeynotes
+            kSizer = category.newSizer
+            kColor = (0, 160, 0)
         # Get the next number for the correct keynote type
-        nextNum = len(kList)
+        nextNum = kList[-1].num + 1
         # Make the keynote and append it to the appropriate list
         k = knm.Keynote(category, num=nextNum, kType=kType)
         kList.append(k)
         print(k)
         # Build the keynote widgets and add to the sizer
+        sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)
+        kSizer.Add(sizer, 0, wx.EXPAND, 0)
+        category.pageWidget.Layout()
 
     def hideKeynote(self):
         """
@@ -262,31 +273,33 @@ class Application(wx.Frame):
         self.textWidget.Show()
         self.disabledWidget.Show()
 
+    def buildKeynote(self, page, k, color):
+        """Create a row for a keynote"""
+        print("Building keynote {}".format(k))
+        kSizer = wx.BoxSizer(wx.HORIZONTAL)
+        id = k.identifier()
+        kn = wx.StaticText(page, label=id)
+        kn.SetMinSize(wx.Size(50, 50))
+        kn.SetForegroundColour(color)
+        kt = wx.TextCtrl(page,
+                         style=wx.TE_MULTILINE,
+                         value=k.text)
+        kt.SetMinSize(wx.Size(200, 50))
+        kd = wx.CheckBox(page, label='Exclude')
+        kd.SetValue(k.disabled)
+        kSizer.Add(kn, 0, wx.ALL, 3)
+        kSizer.Add(kt, 1, wx.ALL, 3)
+        kSizer.Add(kd, 0, wx.ALL, 3)
+        # Store the widgets back into the data
+        k.numberWidget = kn
+        k.textWidget = kt
+        k.disabledWidget = kd
+        return kSizer
+
     def buildEditor(self):
         """
         Create the widgets for keynotes under category tabs in the notebook
         """
-
-        def buildKeynote(page, k, color):
-            """Create a row for a keynote"""
-            print("Building keynote {}".format(k))
-            kSizer = wx.BoxSizer(wx.HORIZONTAL)
-            id = k.identifier()
-            kn = wx.StaticText(page, label=id)
-            kn.SetForegroundColour(color)
-            kn.SetMinSize(wx.Size(50, 20))
-            kt = wx.TextCtrl(page,
-                             style=wx.TE_MULTILINE, value=k.text)
-            kd = wx.CheckBox(page, label='Exclude')
-            kd.SetValue(k.disabled)
-            kSizer.Add(kn, 0, wx.ALL, 3)
-            kSizer.Add(kt, 1, wx.EXPAND | wx.ALL, 3)
-            kSizer.Add(kd, 0, wx.ALL, 3)
-            # Store the widgets back into the data
-            k.numberWidget = kn
-            k.textWidget = kt
-            k.disabledWidget = kd
-            return kSizer
 
         def buildKeynoteSet(page, keynotes, color):
             """
@@ -294,7 +307,7 @@ class Application(wx.Frame):
             """
             sizer = wx.BoxSizer(wx.VERTICAL)
             for k in keynotes:
-                kSizer = buildKeynote(page, k, color)
+                kSizer = self.buildKeynote(page, k, color)
                 sizer.Add(kSizer, 1, wx.EXPAND, 2)
             return sizer
 
@@ -327,15 +340,6 @@ class Application(wx.Frame):
             page.Fit()
         # Save the current category (the first one created)
         self.currentCategory = self.keynoteFile.categories[0]
-
-    def clearKeynotes(self):
-        """
-        Remove color highlighting from the keynotes.
-        """
-        for c in self.categories:
-            self.tabs.add(c.catWidget)
-            for k in c.keynotes:
-                k.textWidget.config(bg='white')
 
 
 def main():
