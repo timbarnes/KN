@@ -166,11 +166,11 @@ class Application(wx.Frame):
         Write out the keynotes file.
         """
         # Create an updated knm.keynoteFile from the widgets
+        self.msg("Updating...")
         for c in self.keynoteFile.categories:
-            # Rebuild all the keynote Information
-            # k.text = k.textWidget.GetValue()
-            # k.disabled = k.disabledWidget.GetValue()
-            pass
+            for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
+                k.text = k.textWidget.GetValue()
+                k.disabled = k.disabledWidget.GetValue()
 
         self.msg("Saving file {}".format(self.keynoteFile.fileName))
         # Move the old file before overwriting
