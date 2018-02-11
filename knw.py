@@ -1,13 +1,14 @@
 import wx
 import wx.lib.agw.aui as aui
+import wx.lib.scrolledpanel as scrolled
 import knm
 
 # wxPython version refactored
 
 
-class categoryPage(wx.Panel):
+class categoryPage(scrolled.ScrolledPanel):
     """
-    A tab for a category
+    A tab for a category is a scrolled panel
     """
 
     def __init__(self, parent, category):
@@ -20,21 +21,11 @@ class categoryPage(wx.Panel):
         self.newRows = []
         self.category = category
         # Create the page
-        wx.Panel.__init__(self, parent)
+        scrolled.ScrolledPanel.__init__(self, parent, -1)
+        self.SetupScrolling()
 
     def GetPageName(self):
         return self.category.name
-# class keynoteRow(wx.BoxSizer):
-#     """
-#     A number, text and checkbox for a keynote.
-#     """
-#
-#     def __init__(self, *args, **kwargs):
-#         self.keynote = {}
-#         self.keynote = kwargs.pop('keynote')
-#         print(self.keynote)
-#         wx.BoxSizer.__init__(self, *args, **kwargs)
-#         self.SetOrientation(wx.HORIZONTAL)
 
 
 class Application(wx.Frame):
