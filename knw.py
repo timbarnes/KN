@@ -1,5 +1,5 @@
-import os
 import wx
+import wx.lib.agw.aui as aui
 import knm
 
 # wxPython version refactored
@@ -80,7 +80,7 @@ class Application(wx.Frame):
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
         # Create the notebook for Categories
-        self.categoryNotebook = wx.Notebook(self.panel)
+        self.categoryNotebook = aui.AuiNotebook(self.panel)
         self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
         #
         self.panel.SetSizer(self.mainBox)
@@ -113,14 +113,19 @@ class Application(wx.Frame):
             k.disabledWidget.Show()
 
         if event.GetKeyCode() == wx.WXK_RETURN:
-            found = False
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
+                n = 0
                 for c in self.data:
-                    for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
+                    self.categoryNotebook.EnableTab(n, True)
+                    n += 1
+                    for k in (c.demoKeynotes +
+                              c.existingKeynotes + c.newKeynotes):
                         unHide(k)
                 return
+            n = 0
             for c in self.data:
+                found = False
                 for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
                     ktext = k.textWidget.GetValue()
                     if ktext.upper().count(ss.upper()) > 0:
@@ -130,15 +135,10 @@ class Application(wx.Frame):
                         hide(k)
                 if not found:
                     # Hide the tab
-                    c.pageWidget.Hide()
-                    pass
+                    self.categoryNotebook.EnableTab(n, False)
+                n += 1
         else:
             event.Skip()
-            # if found:
-            #     self.tabs.add(c.catWidget)
-            #     found = False
-            # else:
-            #     self.tabs.hide(c.catWidget)
 
     def onOpen(self, event):
         """
