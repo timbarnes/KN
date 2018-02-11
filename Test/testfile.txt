@@ -13,8 +13,8 @@ D0102	Demo Site 2	1
 D0103	Demo Site
 E0101	Existing Site 1	1
 N0101	New Site 1	1
-N0102	New Site 2nd	1
 
 D0201	Demo Floor 1	2
 E0201	Existing Floor 1	2
 N0201	New Floor 1	2
+

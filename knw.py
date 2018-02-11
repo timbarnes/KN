@@ -150,12 +150,13 @@ class Application(wx.Frame):
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
-            self.keynoteFileName = fileDialog.GetPath()
+            # Make a keynoteFile object and populate
             self.keynoteFile = knm.keynoteFile()
             try:
-                self.data = self.keynoteFile.load(self.keynoteFileName)
+                self.keynoteFile.load(fileDialog.GetPath())
             except IOError:
-                self.error("Unable to load file {}".format(self.keynoteFile))
+                self.error("Unable to load file {}".format(
+                    self.keynoteFile.fileName))
             # self.data is the input from the file, so build the GUI
             self.msg("Loaded file data")
             self.buildEditor()
@@ -165,7 +166,7 @@ class Application(wx.Frame):
         Write out the keynotes file.
         """
         # Create an updated knm.keynoteFile from the widgets
-        for c in self.data:
+        for c in self.keynoteFile.categories:
             # Rebuild all the keynote Information
             # k.text = k.textWidget.GetValue()
             # k.disabled = k.disabledWidget.GetValue()
@@ -173,7 +174,7 @@ class Application(wx.Frame):
 
         self.msg("Saving file {}".format(self.keynoteFile))
         # Move the old file before overwriting
-        knm.save(self.data, self.keynoteFile)
+        self.keynoteFile.save()
 
     def hideKeynote(self):
         """
@@ -222,7 +223,7 @@ class Application(wx.Frame):
         while notebook.GetPageCount():
             notebook.DeletePage(0)
 
-        for c in self.data:  # The original data from the file
+        for c in self.keynoteFile.categories:  # Original data from the file
             print("Building category {}".format(c))  # A category
             # Create a new page (frame), add it to the notebook
             page = categoryPage(notebook)  # Make the page

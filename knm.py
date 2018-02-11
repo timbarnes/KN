@@ -8,7 +8,8 @@ File I/O
 
 class Category(object):
     """
-    Information for a specific category. A Category is a wx.Panel.
+    Information for a specific category.
+    A Category holds three dictionaries of keynotes.
     """
 
     def __init__(self, name, num=99):
@@ -94,7 +95,7 @@ class keynoteFile(object):
     """
     A record containing all the data for a keynote file.
     """
-
+    fileName = None
     categories = []  # A list of categories, with keynotes attached
 
     def load(self, keynoteFile):
@@ -105,6 +106,8 @@ class keynoteFile(object):
         self.categories = []
         # Load in the new stuff
         with open(keynoteFile, "r") as f:
+            # Save the filename now that we know it opened OK
+            self.fileName = keynoteFile
             self.categories = self.readCategories(f)
             print("{} categories found.".format(len(self.categories)))
             for c in self.categories:
@@ -156,13 +159,14 @@ class keynoteFile(object):
             ll = f.readline()
         return (demoKeynotes, existingKeynotes, newKeynotes)
 
-    def save(self, keynoteFile):
+    def save(self):
         """
         Write out the keynote data in the record.
+        Assumes any updates to the record have already been made.
         """
         # Create a backup copy of the file
-        os.rename(self.keynoteFile, self.keynoteFile + '~')
-        with open(self.keynoteFile, 'w+') as f:
+        os.rename(self.fileName, self.fileName + '~')
+        with open(self.fileName, 'w+') as f:
             for c in self.categories:
                 f.write(c.name)
                 f.write('\n')
@@ -170,11 +174,12 @@ class keynoteFile(object):
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.demoKeynotes:
-                    pass
+                    f.write(k.fullstring())
+                    f.write('\n')
                 for k in c.existingKeynotes:
-                    pass
+                    f.write(k.fullstring())
+                    f.write('\n')
                 for k in c.newKeynotes:
-                    pass
                     f.write(k.fullstring())
                     f.write('\n')
                     print(k.fullstring())
