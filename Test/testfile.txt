@@ -2,9 +2,9 @@
 1	Site
 2	Floor
 
-D0001	Demo 1	0
-D0002	Demo 2	0
-E0001	Existing 1	0
+D0001	Demo 1	disabled
+D0002	Demo 2	disabled
+E0001	Existing 1	disabled
 E0002	Existing 2	0
 E0003	<Empty>	0
 N0001	New 1	0
@@ -20,3 +20,4 @@ D0201	Demo Floor 1	2
 E0201	Existing Floor 1	2
 N0201	New Floor 1	2
 N0202	<Empty>	2
+

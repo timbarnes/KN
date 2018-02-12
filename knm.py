@@ -56,6 +56,7 @@ class Keynote(object):
     """
 
     def __init__(self, number=None, kType=None, category=None,
+                 disabled=False,
                  numString=None, kText='<Empty>', catString=None):
         """
         Build a Keynote from a number (as string), kText and category no.
@@ -66,14 +67,14 @@ class Keynote(object):
             self.catnum = category.num
             self.num = number
             self.text = kText
-            self.disabled = False
+            self.disabled = disabled
             self.category = category
             print(self)
             return
         # We are building from a line in a file
         if len(numString) == 5:
             if not numString[0] in 'DEN':
-                print("Bad first character: <{}>".format(line))
+                print("Bad first character: <{}>".format(numString))
             self.den = numString[0]   # First character is D, E, or N
             self.catnum = int(numString[1:3])  # Category Number
             self.num = int(numString[3:6])
@@ -93,7 +94,7 @@ class Keynote(object):
 
     def fullstring(self):
         if self.disabled:
-            return "{}\t{}".format(self.identifier(), self.text)
+            return "{}\t{}\tdisabled".format(self.identifier(), self.text)
         else:
             return "{}\t{}\t{}".format(self.identifier(),
                                        self.text, self.category.num)
