@@ -146,8 +146,8 @@ class Application(wx.Frame):
                     # Hide the tab
                     self.categoryNotebook.EnableTab(n, False)
                 n += 1
+                self.categoryNotebook.DoSizing()
                 c.pageWidget.Layout()
-
         else:
             event.Skip()
 
@@ -247,6 +247,7 @@ class Application(wx.Frame):
         sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
         category.pageWidget.Layout()
+        self.categoryNotebook.DoSizing()
 
     def hideKeynote(self):
         """

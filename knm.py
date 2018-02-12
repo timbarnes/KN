@@ -80,7 +80,6 @@ class Keynote(object):
         self.num = int(line[3:6])
         self.category = category  # Zero-based categories
         ll = line.split('\t')  # Split at tabs
-        # print(ll)
         self.text = ll[1]
         if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
             self.disabled = True
@@ -137,14 +136,16 @@ class keynoteFile(object):
         """
         while True:
             line = f.readline().rstrip('\n')
-            if len(line) == 0 or line[0] in '# \t':
+            if len(line) == 0 or line[0] in ' \t':
                 break
             else:
                 ll = line.split('\t')
-                print(ll)
-                c = Category(int(ll[0]), ll[1])  # number then name
-                print(c)
-                self.categories.append(c)  # Make a new one
+                if len(ll) == 2:
+                    c = Category(int(ll[0]), ll[1])  # number then name
+                    print(c)
+                    self.categories.append(c)  # Make a new one
+                else:
+                    print("Problem with category line: <{}>".format(ll))
         return self.categories
 
     def readKeynotes(self, f, category):
