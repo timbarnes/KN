@@ -40,13 +40,16 @@ N0203	<Empty>	2
 
 D0301	Demo 1	3
 D0302	Demo 2	3
+D0303	<Empty>	3
 E0301	Existing 1	3
 E0302	Existing 2	3
-N0301	New 1	3
+N0301	construct new wall where noted	3
+N0302	<Empty>	3
 
 D0401	Demo 1	4
-D0402	Demo 2	4
+D0402	Demo 2	disabled
 E0401	Existing 1	4
 E0402	Existing 2	4
 N0401	New 1	4
+N0402	<Empty>	4
 

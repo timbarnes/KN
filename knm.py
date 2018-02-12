@@ -99,8 +99,8 @@ class Keynote(object):
         if self.disabled:
             return "{}\t{}\tdisabled".format(self.identifier(), self.text)
         else:
-            return "{}\t{}\t{}".format(self.identifier(),
-                                       self.text, self.category.num)
+            return "{}\t{}\t{}".format(self.identifier(), self.text,
+                                       self.category.num)
 
     def __str__(self):
         if self.disabled:

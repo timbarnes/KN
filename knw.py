@@ -91,7 +91,6 @@ class Application(wx.Frame):
         self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
         self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
                                    self.onPageChanged)
-        #
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
 
@@ -128,14 +127,13 @@ class Application(wx.Frame):
                 for c in self.keynoteFile.categories:
                     self.categoryNotebook.EnableTab(n, True)
                     n += 1
-                    for k in (c.demoKeynotes +
-                              c.existingKeynotes + c.newKeynotes):
+                    for k in (c.allKeynotes()):
                         unHide(k)
                 return
             n = 0
             for c in self.keynoteFile.categories:
                 found = False
-                for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
+                for k in (c.allKeynotes()):
                     ktext = k.textWidget.GetValue()
                     if ktext.upper().count(ss.upper()) > 0:
                         found = True
@@ -182,8 +180,11 @@ class Application(wx.Frame):
         # Create an updated knm.keynoteFile from the widgets
         self.msg("Updating...")
         for c in self.keynoteFile.categories:
-            for k in c.demoKeynotes + c.existingKeynotes + c.newKeynotes:
-                k.text = k.textWidget.GetValue()
+            for k in c.allKeynotes():
+                s = k.textWidget.GetValue()
+                s = ''.join(c for c in s if c not in '\t\n')
+                k.text = s.upper()
+                k.textWidget.SetValue(k.text)
                 k.disabled = k.disabledWidget.GetValue()
 
         self.msg("Saving file {}".format(self.keynoteFile.fileName))
