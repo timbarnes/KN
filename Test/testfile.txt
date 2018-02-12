@@ -1,6 +1,6 @@
-General
-Site
-Floor
+0	General
+1	Site
+2	Floor
 
 D0001	Demo 1	0
 D0002	Demo 2	0
@@ -20,4 +20,3 @@ D0201	Demo Floor 1	2
 E0201	Existing Floor 1	2
 N0201	New Floor 1	2
 N0202	<Empty>	2
-

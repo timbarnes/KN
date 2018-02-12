@@ -12,7 +12,7 @@ class Category(object):
     A Category holds three dictionaries of keynotes.
     """
 
-    def __init__(self, name, num=99):
+    def __init__(self, num, name):
         """
         Create category object
         """
@@ -133,18 +133,18 @@ class keynoteFile(object):
     def readCategories(self, f):
         """
         Read the category list from a keynote file
+        Line format is <number> \t <name>
         """
-        n = 0
         while True:
-            ll = f.readline().rstrip('\n')
-            if len(ll) == 0 or ll[0] in '# ':
+            line = f.readline().rstrip('\n')
+            if len(line) == 0 or line[0] in '# \t':
                 break
             else:
-                # print('Creating category: {}/{}'.format(ll, n))
-                c = Category(ll, n)
+                ll = line.split('\t')
+                print(ll)
+                c = Category(int(ll[0]), ll[1])  # number then name
                 print(c)
                 self.categories.append(c)  # Make a new one
-                n += 1
         return self.categories
 
     def readKeynotes(self, f, category):
@@ -186,7 +186,7 @@ class keynoteFile(object):
             cCount = 0
             kCount = 0
             for c in self.categories:
-                f.write(c.name)
+                f.write("{}\t{}".format(c.num, c.name))
                 f.write('\n')
                 cCount += 1
             f.write('\n')  # A blank line
