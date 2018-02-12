@@ -168,9 +168,12 @@ class Application(wx.Frame):
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
-            # Data is stored in the keynoteFile record, so build the GUI
-            self.msg("Loaded file data")
-            self.buildEditor()
+            if len(self.keynoteFile.categories) > 0:
+                # Data is stored in the keynoteFile record, so build the GUI
+                self.msg("Loaded file data")
+                self.buildEditor()
+            else:
+                self.error("No records found")
 
     def onSave(self, event):
         """
@@ -240,7 +243,7 @@ class Application(wx.Frame):
         # Get the next number for the correct keynote type
         nextNum = kList[-1].num + 1
         # Make the keynote and append it to the appropriate list
-        k = knm.Keynote(category, num=nextNum, kType=kType)
+        k = knm.Keynote(number=nextNum, kType=kType, category=category)
         kList.append(k)
         print(k)
         # Build the keynote widgets and add to the sizer

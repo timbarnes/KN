@@ -18,7 +18,7 @@ class Category(object):
         """
         print("Creating category {}".format(name))
         self.name = name
-        self.num = num
+        self.num = int(num)
         # Placeholders for keynotes to be added later
         self.demoKeynotes = []
         self.existingKeynotes = []
@@ -55,39 +55,38 @@ class Keynote(object):
     Information for a single keynote.
     """
 
-    def __init__(self, category, line=None, num=None, kType=None, note=None):
+    def __init__(self, number=None, kType=None, category=None,
+                 numString=None, kText='<Empty>', catString=None):
         """
-        Build a Keynote from a line in the file, attach to a category.
-        Alternatively build from a number and category.
+        Build a Keynote from a number (as string), kText and category no.
         """
-        if not line:
+        if number and kType and category:
             # Build from scratch using num and kType
             self.den = kType  # D, E or N
             self.catnum = category.num
-            self.num = num
-            if note:
-                self.text = note
-            else:
-                self.text = '<Empty>'
+            self.num = number
+            self.text = kText
             self.disabled = False
             self.category = category
+            print(self)
             return
         # We are building from a line in a file
-        if not line[0] in 'DEN':
-            print("Bad first character: <{}>".format(line))
-        self.den = line[0]   # First character is D, E, or N
-        self.catnum = int(line[1:3])  # Category Number
-        self.num = int(line[3:6])
-        self.category = category  # Zero-based categories
-        ll = line.split('\t')  # Split at tabs
-        self.text = ll[1]
-        if len(ll) == 2 or ll[2] == 'disabled':  # Keynote is Disabled
+        if len(numString) == 5:
+            if not numString[0] in 'DEN':
+                print("Bad first character: <{}>".format(line))
+            self.den = numString[0]   # First character is D, E, or N
+            self.catnum = int(numString[1:3])  # Category Number
+            self.num = int(numString[3:6])
+            if category:
+                self.category = category
+        else:
+            print("Bad number string: <{}>".format(numString))
+        self.text = kText
+        if catString == 'disabled':  # Keynote is Disabled
             self.disabled = True
         else:
             self.disabled = False
-            if self.catnum != category.num:
-                print("Category mismatch: {} / {}".format(self.catnum,
-                                                          category.num))
+        print(self)
 
     def identifier(self):
         return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
@@ -100,8 +99,13 @@ class Keynote(object):
                                        self.text, self.category.num)
 
     def __str__(self):
-        return "Keynote({}, {})".format(self.identifier(),
-                                        self.category.__str__())
+        if self.disabled:
+            cat = 'disabled'
+        else:
+            cat = self.catnum
+        return ("Keynote(numString={}, "
+                "kText='{}', catString={})".format(self.identifier(),
+                                                   self.text, cat))
 
 
 class keynoteFile(object):
@@ -117,63 +121,43 @@ class keynoteFile(object):
         """
         # Clear out any existing categories or keynotes
         self.categories = []
+        keynoteList = []
         # Load in the new stuff
         with open(keynoteFile, "r") as f:
             # Save the filename now that we know it opened OK
             self.fileName = keynoteFile
-            self.categories = self.readCategories(f)
-            print("{} categories found.".format(len(self.categories)))
-            for c in self.categories:
-                (c.demoKeynotes, c.existingKeynotes, c.newKeynotes) =\
-                    self.readKeynotes(f, c)  # Read the keynotes for a category
-                print(c)
-        return self.categories
-
-    def readCategories(self, f):
-        """
-        Read the category list from a keynote file
-        Line format is <number> \t <name>
-        """
-        while True:
-            line = f.readline().rstrip('\n')
-            if len(line) == 0 or line[0] in ' \t':
-                break
-            else:
+            line = f.readline()
+            while line != '':  # Empty string means end of file
+                line = line.rstrip('\t \n')
                 ll = line.split('\t')
+                print(ll)
                 if len(ll) == 2:
-                    c = Category(int(ll[0]), ll[1])  # number then name
-                    print(c)
-                    self.categories.append(c)  # Make a new one
+                    self.categories.append(Category(ll[0], ll[1]))
+                elif len(ll) == 3:
+                    keynoteList.append(Keynote(numString=ll[0], kText=ll[1],
+                                               catString=ll[2]))
                 else:
-                    print("Problem with category line: <{}>".format(ll))
-        return self.categories
+                    print("Ignoring line <{}>".format(line))
+                line = f.readline()
 
-    def readKeynotes(self, f, category):
-        """
-        Read the keynotes from an open keynote file for one category.
-        Disabled keynotes don't have a 3rd entry;
-        Store them by category.
-        """
-        demoKeynotes = []
-        existingKeynotes = []
-        newKeynotes = []
-        ll = f.readline()
-        while ll != '':    # Empty string signified end of file
-            ll = ll.rstrip(' \n')  # Remove leading/trailing newline or space
-            if ll == '':   # It's a blank line and the group is finished
-                break
-            else:
-                kn = Keynote(category, ll)
-                # print('Found keynote: {}'.format(kn))
-                if kn.den == 'D':
-                    demoKeynotes.append(kn)
-                elif kn.den == 'E':
-                    existingKeynotes.append(kn)
-                else:
-                    newKeynotes.append(kn)
-            ll = f.readline()
+            print("{} categories found.".format(len(self.categories)))
+            print("{} keynotes found".format(len(keynoteList)))
+            for c in self.categories:
+                # Attach keynotes to categories correctly
+                for k in keynoteList:
+                    if k.catnum == c.num:
+                        k.category = c
+                        if k.den == 'D':
+                            c.demoKeynotes.append(k)
+                        elif k.den == 'E':
+                            c.existingKeynotes.append(k)
+                        elif k.den == 'N':
+                            c.newKeynotes.append(k)
+                        else:
+                            print("Keynote has no category number: {}".format(
+                                k.fullstring()))
         self.pprint()
-        return (demoKeynotes, existingKeynotes, newKeynotes)
+        return self.categories
 
     def save(self):
         """
