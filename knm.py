@@ -43,8 +43,11 @@ class Category(object):
         self.existingKeynotes = []
         self.newKeynotes = []
 
-    def keynotesAll(self):
+    def allKeynotes(self):
         return self.demoKeynotes + self.existingKeynotes + self.newKeynotes
+
+    def fullstring(self):
+        return "{}\t{}".format(self.num, self.name)
 
     def __str__(self):
         return "Category({}, {})".format(self.name, self.num)
@@ -148,15 +151,7 @@ class keynoteFile(object):
                 for k in keynoteList:
                     if k.catnum == c.num:
                         k.category = c
-                        if k.den == 'D':
-                            c.demoKeynotes.append(k)
-                        elif k.den == 'E':
-                            c.existingKeynotes.append(k)
-                        elif k.den == 'N':
-                            c.newKeynotes.append(k)
-                        else:
-                            print("Keynote has no category number: {}".format(
-                                k.fullstring()))
+                        c.addKeynote(k)
         self.pprint()
         return self.categories
 
@@ -177,15 +172,7 @@ class keynoteFile(object):
                 cCount += 1
             f.write('\n')  # A blank line
             for c in self.categories:
-                for k in c.demoKeynotes:
-                    f.write(k.fullstring())
-                    f.write('\n')
-                    kCount += 1
-                for k in c.existingKeynotes:
-                    f.write(k.fullstring())
-                    f.write('\n')
-                    kCount += 1
-                for k in c.newKeynotes:
+                for k in c.allKeynotes():
                     f.write(k.fullstring())
                     f.write('\n')
                     kCount += 1
@@ -197,10 +184,6 @@ class keynoteFile(object):
         Print a human readable version of the keynoteFile record.
         """
         for c in self.categories:
-            print(c)
-            for k in c.demoKeynotes:
-                print("- {}".format(k.fullstring()))
-            for k in c.existingKeynotes:
-                print("- {}".format(k.fullstring()))
-            for k in c.newKeynotes:
+            print(c.fullstring())
+            for k in c.allKeynotes():
                 print("- {}".format(k.fullstring()))
