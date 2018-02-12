@@ -36,10 +36,11 @@ class Application(wx.Frame):
     def __init__(self, *args, **kwargs):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
-                          'Edit Keynotes', size=(500, 500))
+                          'Edit Keynotes', size=(700, 500))
         # We'll access notebook information from here
         self.categoryNotebook = None
         self.keynoteFile = None
+        self.inactiveHidden = False
         self.buildGUI()
 
     def buildGUI(self):
@@ -74,7 +75,11 @@ class Application(wx.Frame):
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
         # Create the Add keynote buttons
-        aPrompt = wx.StaticText(self.panel, label="Insert new keynotes:")
+        self.hideButton = wx.Button(self.panel, label="Hide/unhide inactive")
+        self.addSizer.Add(self.hideButton, 0, wx.ALL, 8)
+        self.hideButton.Bind(wx.EVT_BUTTON, self.onHideInactive)
+        aPrompt = wx.StaticText(self.panel, style=wx.ALIGN_RIGHT,
+                                label="Insert new keynotes:")
         self.addSizer.Add(aPrompt, 2, wx.EXPAND | wx.ALL, 8)
         self.addDemo = wx.Button(self.panel, label="Add Demo")
         self.addSizer.Add(self.addDemo, 0, wx.ALL, 8)
@@ -106,20 +111,22 @@ class Application(wx.Frame):
         """
         self.msg("Error: {}".format(message))
 
+    @staticmethod
+    def hideKeynote(k):
+        k.numberWidget.Hide()
+        k.textWidget.Hide()
+        k.disabledWidget.Hide()
+
+    @staticmethod
+    def unHideKeynote(k):
+        k.numberWidget.Show()
+        k.textWidget.Show()
+        k.disabledWidget.Show()
+
     def onFilter(self, event):
         """
         Hide keynotes that don't match a search string.
         """
-        def hide(k):
-            k.numberWidget.Hide()
-            k.textWidget.Hide()
-            k.disabledWidget.Hide()
-
-        def unHide(k):
-            k.numberWidget.Show()
-            k.textWidget.Show()
-            k.disabledWidget.Show()
-
         if event.GetKeyCode() == wx.WXK_RETURN:
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
@@ -128,18 +135,18 @@ class Application(wx.Frame):
                     self.categoryNotebook.EnableTab(n, True)
                     n += 1
                     for k in (c.allKeynotes()):
-                        unHide(k)
+                        self.unHideKeynote(k)
                 return
             n = 0
             for c in self.keynoteFile.categories:
                 found = False
-                for k in (c.allKeynotes()):
+                for k in c.allKeynotes():
                     ktext = k.textWidget.GetValue()
                     if ktext.upper().count(ss.upper()) > 0:
                         found = True
-                        unHide(k)
+                        self.unHideKeynote(k)
                     else:
-                        hide(k)
+                        self.hideKeynote(k)
                 if not found:
                     # Hide the tab
                     self.categoryNotebook.EnableTab(n, False)
@@ -148,6 +155,25 @@ class Application(wx.Frame):
                 c.pageWidget.Layout()
         else:
             event.Skip()
+
+    def onHideInactive(self, event):
+        """
+        Hide or show inactive keynotes
+        """
+        if self.inactiveHidden:
+            for c in self.keynoteFile.categories:
+                for k in c.allKeynotes():
+                    if k.disabled:
+                        self.unHideKeynote(k)
+                c.pageWidget.Layout()
+            self.inactiveHidden = False
+        else:
+            for c in self.keynoteFile.categories:
+                for k in c.allKeynotes():
+                    if k.disabled:
+                        self.hideKeynote(k)
+                c.pageWidget.Layout()
+            self.inactiveHidden = True
 
     def onOpen(self, event):
         """
@@ -252,22 +278,6 @@ class Application(wx.Frame):
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
         category.pageWidget.Layout()
         self.categoryNotebook.DoSizing()
-
-    def hideKeynote(self):
-        """
-        Hide the GUI elements of a widget.
-        """
-        self.numberWidget.Hide()
-        self.textWidget.Hide()
-        self.disabledWidget.Hide()
-
-    def unHide(self):
-        """
-        Hide the GUI elements of a widget.
-        """
-        self.numberWidget.Show()
-        self.textWidget.Show()
-        self.disabledWidget.Show()
 
     def buildKeynote(self, page, k, color):
         """Create a row for a keynote"""
