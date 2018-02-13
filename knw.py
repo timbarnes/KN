@@ -282,7 +282,7 @@ class Application(wx.Frame):
         # Make the keynote and append it to the appropriate list
         k = knm.Keynote(number=nextNum, kType=kType, category=category)
         kList.append(k)
-        print(k)
+        # print(k)
         # Build the keynote widgets and add to the sizer
         sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
@@ -291,7 +291,7 @@ class Application(wx.Frame):
 
     def buildKeynote(self, page, k, color):
         """Create a row for a keynote"""
-        print("Building keynote {}".format(k))
+        # print("Building keynote {}".format(k))
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
         id = k.identifier()
         kn = wx.StaticText(page, label=id)
@@ -337,7 +337,7 @@ class Application(wx.Frame):
             notebook.DeletePage(0)
 
         for c in self.keynoteFile.categories:  # Original data from the file
-            print("Building category {}".format(c))  # A category
+            # print("Building category {}".format(c))  # A category
             # Create a new page (frame), add it to the notebook
             page = categoryPage(notebook, c)  # Make the page
             notebook.AddPage(page, c.name)

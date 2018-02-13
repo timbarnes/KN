@@ -16,7 +16,7 @@ class Category(object):
         """
         Create category object
         """
-        print("Creating category {}".format(name))
+        # print("Creating category {}".format(name))
         self.name = name
         self.num = int(num)
         # Placeholders for keynotes to be added later
@@ -64,7 +64,7 @@ class Keynote(object):
             self.text = kText
             self.disabled = disabled
             self.category = category
-            print(self)
+            # print(self)
             return
         # We are building from a line in a file
         if len(numString) == 5:
@@ -82,7 +82,7 @@ class Keynote(object):
             self.disabled = True
         else:
             self.disabled = False
-        print(self)
+        # print(self)
 
     def identifier(self):
         return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
@@ -126,7 +126,7 @@ class keynoteFile(object):
             while line != '':  # Empty string means end of file
                 line = line.rstrip('\t \n')
                 ll = line.split('\t')
-                print(ll)
+                # print(ll)
                 if len(ll) == 2:
                     self.categories.append(Category(ll[0], ll[1]))
                 elif len(ll) == 3:
@@ -144,7 +144,7 @@ class keynoteFile(object):
                     if k.catnum == c.num:
                         k.category = c
                         c.addKeynote(k)
-        self.pprint()
+        # self.pprint()
         return self.categories
 
     def save(self):
@@ -152,7 +152,7 @@ class keynoteFile(object):
         Write out the keynote data in the record.
         Assumes any updates to the record have already been made.
         """
-        self.pprint()
+        # self.pprint()
         # Create a backup copy of the file
         os.rename(self.fileName, self.fileName + '~')
         with open(self.fileName, 'w+') as f:
