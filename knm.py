@@ -35,14 +35,6 @@ class Category(object):
         else:
             self.newKeynotes.append(keynote)
 
-    def destroyKeynotes(self):
-        """
-        Forget all the keynotes associated with the category.
-        """
-        self.demoKeynotes = []
-        self.existingKeynotes = []
-        self.newKeynotes = []
-
     def allKeynotes(self):
         return self.demoKeynotes + self.existingKeynotes + self.newKeynotes
 
@@ -127,7 +119,7 @@ class keynoteFile(object):
         self.categories = []
         keynoteList = []
         # Load in the new stuff
-        with open(keynoteFile, "r", encoding='latin-1') as f:
+        with open(keynoteFile, "r") as f:
             # Save the filename now that we know it opened OK
             self.fileName = keynoteFile
             line = f.readline()

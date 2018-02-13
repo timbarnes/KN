@@ -343,7 +343,7 @@ class Application(wx.Frame):
             pageSizer.Add(c.newSizer, 0, wx.EXPAND, 0)
 
             page.SetSizer(pageSizer)
-            page.Fit()
+            page.Layout()
         # Save the current category (the first one created)
         self.currentCategory = self.keynoteFile.categories[0]
 
