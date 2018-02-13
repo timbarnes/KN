@@ -285,12 +285,12 @@ class Application(wx.Frame):
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
         id = k.identifier()
         kn = wx.StaticText(page, label=id)
-        kn.SetMinSize(wx.Size(50, 50))
+        kn.SetMinSize(wx.Size(50, 30))
         kn.SetForegroundColour(color)
         kt = wx.TextCtrl(page,
                          style=wx.TE_MULTILINE,
                          value=k.text)
-        kt.SetMinSize(wx.Size(200, 50))
+        kt.SetMinSize(wx.Size(200, 36))
         kd = wx.CheckBox(page, label='Exclude')
         kd.SetValue(k.disabled)
         kSizer.Add(kn, 0, wx.ALL, 3)

@@ -127,7 +127,7 @@ class keynoteFile(object):
         self.categories = []
         keynoteList = []
         # Load in the new stuff
-        with open(keynoteFile, "r") as f:
+        with open(keynoteFile, "r", encoding='latin-1') as f:
             # Save the filename now that we know it opened OK
             self.fileName = keynoteFile
             line = f.readline()
