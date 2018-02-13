@@ -77,7 +77,7 @@ class Application(wx.Frame):
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
         # Create the Add keynote buttons
-        self.hideButton = wx.Button(self.panel, label="Hide/unhide inactive")
+        self.hideButton = wx.Button(self.panel, label=" Hide inactive ")
         self.addSizer.Add(self.hideButton, 0, wx.ALL, 8)
         self.hideButton.Bind(wx.EVT_BUTTON, self.onHideInactive)
         aPrompt = wx.StaticText(self.panel, style=wx.ALIGN_RIGHT,
@@ -138,6 +138,7 @@ class Application(wx.Frame):
                     n += 1
                     for k in (c.allKeynotes()):
                         self.unHideKeynote(k)
+                    c.pageWidget.Layout()
                 return
             n = 0
             for c in self.keynoteFile.categories:
@@ -168,6 +169,7 @@ class Application(wx.Frame):
                     if k.disabled:
                         self.unHideKeynote(k)
                 c.pageWidget.Layout()
+            event.GetEventObject().SetLabelText('Hide Inactive')
             self.inactiveHidden = False
         else:
             for c in self.keynoteFile.categories:
@@ -175,6 +177,7 @@ class Application(wx.Frame):
                     if k.disabled:
                         self.hideKeynote(k)
                 c.pageWidget.Layout()
+            event.GetEventObject().SetLabelText('Show Inactive')
             self.inactiveHidden = True
 
     def onOpen(self, event):
