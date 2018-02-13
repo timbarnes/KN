@@ -41,6 +41,7 @@ class Application(wx.Frame):
         self.categoryNotebook = None
         self.keynoteFile = None
         self.inactiveHidden = False
+        self.fileEdited = False
         self.buildGUI()
 
     def buildGUI(self):
@@ -50,8 +51,8 @@ class Application(wx.Frame):
         # Add a button so it looks correct on all platforms
         self.panel = wx.Panel(self, wx.ID_ANY)
         # Status bar for messages
-        self.sb = self.CreateStatusBar()
-        self.sb.SetStatusText("Simple keynote editor")
+        self.sb = self.CreateStatusBar(2, -2, -1)
+        self.sb.SetStatusText("Simple keynote editor", 0)
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
@@ -69,6 +70,7 @@ class Application(wx.Frame):
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSave)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
         # Create the Add keynote sizer
@@ -99,11 +101,11 @@ class Application(wx.Frame):
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
 
-    def msg(self, message):
+    def msg(self, message, field=0):
         """
         Display in Status area.
         """
-        self.sb.SetStatusText(message)
+        self.sb.SetStatusText(message, field)
 
     def error(self, message):
         """
@@ -195,6 +197,7 @@ class Application(wx.Frame):
             if len(self.keynoteFile.categories) > 0:
                 # Data is stored in the keynoteFile record, so build the GUI
                 self.msg("Loaded file data")
+                self.msg(self.keynoteFile.fileName, 1)
                 self.buildEditor()
             else:
                 self.error("No records found")
@@ -208,6 +211,19 @@ class Application(wx.Frame):
         # Move the old file before overwriting
         r = self.keynoteFile.save()
         self.msg("Saved {} categories; {} keynotes".format(*r))
+        self.fileEdited = False
+
+    def onClose(self, event):
+        """
+        If file is unsaved, prompt for save.
+        """
+        if event.CanVeto() and self.fileEdited:
+            if wx.MessageBox("The file has not been saved.",
+                             "Continue exiting?",
+                             wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
+                event.Veto()
+                return
+        event.Skip()
 
     def onAddDemo(self, event):
         """
@@ -247,6 +263,7 @@ class Application(wx.Frame):
         """
         w = event.GetEventObject()
         w.keynote.disabled = w.GetValue()
+        self.fileEdited = True
 
     def onTextChange(self, event):
         """
@@ -259,6 +276,7 @@ class Application(wx.Frame):
         s = s.upper()
         w.keynote.text = s  # Write it to the keynote
         w.SetValue(s)       # Save it back to the widget
+        self.fileEdited = True
 
     def addKeynote(self, kType):
         """
@@ -288,6 +306,7 @@ class Application(wx.Frame):
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
         category.pageWidget.Layout()
         self.categoryNotebook.DoSizing()
+        self.fileEdited = True
 
     def buildKeynote(self, page, k, color):
         """Create a row for a keynote"""
