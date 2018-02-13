@@ -203,15 +203,6 @@ class Application(wx.Frame):
         """
         Write out the keynotes file.
         """
-        # Create an updated knm.keynoteFile from the widgets
-        self.msg("Updating...")
-        for c in self.keynoteFile.categories:
-            for k in c.allKeynotes():
-                s = k.textWidget.GetValue()
-                s = ''.join(c for c in s if c not in '\t\n')
-                k.text = s.upper()
-                k.textWidget.SetValue(k.text)
-                k.disabled = k.disabledWidget.GetValue()
 
         self.msg("Saving file {}".format(self.keynoteFile.fileName))
         # Move the old file before overwriting
@@ -249,6 +240,25 @@ class Application(wx.Frame):
         val = event.GetEventObject()
         val = val.GetCurrentPage()
         self.currentCategory = val.category
+
+    def onDisableCheck(self, event):
+        """
+        Update keynote record based on GetValue.
+        """
+        w = event.GetEventObject()
+        w.keynote.disabled = w.GetValue()
+
+    def onTextChange(self, event):
+        """
+        Update keynote record based on GetValue.
+        """
+        w = event.GetEventObject()
+        self.msg("Updating text: {}".format(w.keynote.fullstring()))
+        s = w.GetValue()
+        s = ''.join(c for c in s if c not in '\t\n')
+        s = s.upper()
+        w.keynote.text = s  # Write it to the keynote
+        w.SetValue(s)       # Save it back to the widget
 
     def addKeynote(self, kType):
         """
@@ -291,8 +301,12 @@ class Application(wx.Frame):
                          style=wx.TE_MULTILINE,
                          value=k.text)
         kt.SetMinSize(wx.Size(200, 36))
+        kt.Bind(wx.EVT_KILL_FOCUS, self.onTextChange)
+        kt.keynote = k
         kd = wx.CheckBox(page, label='Exclude')
+        kd.keynote = k
         kd.SetValue(k.disabled)
+        kd.Bind(wx.EVT_CHECKBOX, self.onDisableCheck)
         kSizer.Add(kn, 0, wx.ALL, 3)
         kSizer.Add(kt, 1, wx.ALL, 3)
         kSizer.Add(kd, 0, wx.ALL, 3)
