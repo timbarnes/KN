@@ -36,7 +36,7 @@ class Application(wx.Frame):
     def __init__(self, *args, **kwargs):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
-                          'Edit Keynotes', size=(700, 500))
+                          'Edit Keynotes', size=(800, 500))
         # We'll access notebook information from here
         self.categoryNotebook = None
         self.keynoteFile = None
@@ -77,7 +77,7 @@ class Application(wx.Frame):
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
         # Create the Add keynote buttons
-        self.hideButton = wx.Button(self.panel, label=" Hide inactive ")
+        self.hideButton = wx.Button(self.panel, label="  Hide inactive  ")
         self.addSizer.Add(self.hideButton, 0, wx.ALL, 8)
         self.hideButton.Bind(wx.EVT_BUTTON, self.onHideInactive)
         aPrompt = wx.StaticText(self.panel, style=wx.ALIGN_RIGHT,
@@ -273,13 +273,17 @@ class Application(wx.Frame):
         Update keynote record based on GetValue.
         """
         w = event.GetEventObject()
-        self.msg("Updating text: {}".format(w.keynote.fullstring()))
         s = w.GetValue()
         s = ''.join(c for c in s if c not in '\t\n')
         s = s.upper()
-        w.keynote.text = s  # Write it to the keynote
-        w.SetValue(s)       # Save it back to the widget
-        self.fileEdited = True
+        if s != w.keynote.text:  # It's changed, so update
+            w.keynote.text = s  # Write it to the keynote
+            w.SetValue(s)       # Save it back to the widget
+            yDepth = 20 * max(len(s) / 75, 2)
+            w.SetMinSize(wx.Size(200, yDepth))
+            self.msg("Updating text: {}".format(w.keynote.fullstring()))
+            self.fileEdited = True
+            self.currentCategory.pageWidget.Layout()
 
     def addKeynote(self, kType):
         """
@@ -317,12 +321,13 @@ class Application(wx.Frame):
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
         id = k.identifier()
         kn = wx.StaticText(page, label=id)
-        kn.SetMinSize(wx.Size(50, 30))
+        kn.SetMinSize(wx.Size(50, 16))
         kn.SetForegroundColour(color)
         kt = wx.TextCtrl(page,
                          style=wx.TE_MULTILINE,
                          value=k.text)
-        kt.SetMinSize(wx.Size(200, 36))
+        yDepth = 20 * max(len(k.text) / 75, 2)
+        kt.SetMinSize(wx.Size(200, yDepth))
         kt.Bind(wx.EVT_KILL_FOCUS, self.onTextChange)
         kt.keynote = k
         kd = wx.CheckBox(page, label='Exclude')
