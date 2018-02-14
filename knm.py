@@ -1,5 +1,6 @@
 import os
 import time
+from openpyxl import load_workbook
 """
 Category and category group classes
 Keynote and keynote group classes
@@ -187,7 +188,43 @@ class keynoteFile(object):
         """
         Load in an Excel keynote fileand return categories and keynotes.
         """
-        pass
+        try:
+            print("Opening file:", keynoteFile)
+            self.workbook = load_workbook(filename=keynoteFile)
+        except Exception as e:
+            print('Excel open failed: {}', e)
+            return False
+        # Save the filename now that we know it opened OK
+        self.fileName = keynoteFile
+        # Assume first tab holds the Data
+        rows = tuple(self.workbook.active.rows)
+        keynoteList = []
+        for row in rows:
+            # Read a row
+            if not (row[0].value and row[1].value):
+                continue  # Ignore any row with a blank in column B
+            if type(row[0].value) == int:
+                # It's a category
+                print('Found category', row[1].value)
+                self.categories.append(Category(row[0].value, row[1].value))
+            elif row[0].value and len(row[0].value) == 5:
+                # There's a keynote identifier
+                keynoteList.append(Keynote(numString=row[0].value,
+                                           kText=row[1].value,
+                                           catString=str(row[2].value)))
+            else:
+                print("Can't process /{}/{}/{}/".format(row[0].value,
+                                                        row[1].value, row[2].value))
+        print("{} categories found.".format(len(self.categories)))
+        print("{} keynotes found".format(len(keynoteList)))
+        for c in self.categories:
+            # Attach keynotes to categories correctly
+            for k in keynoteList:
+                if k.catnum == c.num:
+                    k.category = c
+                    c.addKeynote(k)
+        # self.pprint()
+        return self.categories
 
     def saveXlsx(self):
         """
