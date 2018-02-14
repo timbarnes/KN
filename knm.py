@@ -1,6 +1,8 @@
 import os
 import time
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles.colors import RED, GREEN
 """
 Category and category group classes
 Keynote and keynote group classes
@@ -200,9 +202,8 @@ class keynoteFile(object):
         rows = tuple(self.workbook.active.rows)
         keynoteList = []
         for row in rows:
-            # Read a row
-            if not (row[0].value and row[1].value):
-                continue  # Ignore any row with a blank in column B
+            if not ((row[0].value or row[0].value == 0) and row[1].value):
+                continue  # Ignore any row with a blank in columns A or B
             if type(row[0].value) == int:
                 # It's a category
                 print('Found category', row[1].value)
@@ -214,7 +215,8 @@ class keynoteFile(object):
                                            catString=str(row[2].value)))
             else:
                 print("Can't process /{}/{}/{}/".format(row[0].value,
-                                                        row[1].value, row[2].value))
+                                                        row[1].value,
+                                                        row[2].value))
         print("{} categories found.".format(len(self.categories)))
         print("{} keynotes found".format(len(keynoteList)))
         for c in self.categories:
@@ -231,27 +233,90 @@ class keynoteFile(object):
         Write out the keynote data in the record to a spreadsheet.
         Assumes any updates to the record have already been made.
         """
+        def writeCell(worksheet, row, col, val,
+                      font=None, fill=None, align=None):
+            """
+            row is a number, col is a letter
+            """
+            addr = '{}{}'.format(col, row)
+            worksheet[addr] = val
+            if font:
+                worksheet[addr].font = font
+            if fill:
+                worksheet[addr].fill = fill
+            if align:
+                worksheet[addr].alignment = align
+
         # Make sure the filename ends in .xlsx, changing it if necessary
         self.fileName = self.fileName.rsplit('.', 1)[0] + '.xlsx'
         # Create a backup copy of the file
         if os.path.isfile(self.fileName):
             os.rename(self.fileName, self.fileName +
                       '.' + str(int(time.time())))
-        with open(self.fileName, 'w+') as f:
-            cCount = 0
-            kCount = 0
-            for c in self.categories:
-                f.write("{}\t{}".format(c.num, c.name))
-                f.write('\n')
-                cCount += 1
-            f.write('\n')  # A blank line
-            for c in self.categories:
-                for k in c.allKeynotes():
-                    f.write(k.fullstring())
-                    f.write('\n')
+        # Create a new workbook and worksheet
+        wb = Workbook()
+        ws = wb.active
+        # Set up widths, colors and fonts
+        ws.column_dimensions['B'].width = 100
+        wrap = Alignment(wrapText=True)
+        boldFont = Font(b=True)
+        redFont = Font(color=RED)
+        greenFont = Font(color=GREEN)
+        grayFont = Font(color='888888', size=9)
+        grayFill = PatternFill("solid", fgColor='BBBBBB')
+        # Counters to keep track of things
+        rowCount = 1
+        cCount = 0
+        kCount = 0
+        # Loop through writing categories
+        for c in self.categories:
+            # Write a category record
+            writeCell(ws, rowCount, 'A', c.num)
+            writeCell(ws, rowCount, 'B', c.name)
+            cCount += 1
+            rowCount += 1
+        writeCell(ws, rowCount, 'A',
+                  ("Mechanically generated keynote file. "
+                   "REMEMBER TO SAVE after editing, then SAVE FILE AS "
+                   "Text (Tab delimited)(*.txt), then load/reload your "
+                   "keynotes on your project Revit file so Revit can see "
+                   "the changes. All keynote / text editing shall be "
+                   "on the Excel file only."), font=redFont, align=wrap)
+        ws.merge_cells(start_row=rowCount, end_row=rowCount,
+                       start_column=1, end_column=2)
+
+        rowCount += 2
+        # Now write keynotes
+        for c in self.categories:
+            writeCell(ws, rowCount, 'A', c.name.upper(), font=boldFont)
+            rowCount += 1
+            for kt in (c.demoKeynotes, c.existingKeynotes, c.newKeynotes):
+                for k in kt:
+                    id = k.identifier()
+                    if id[0] == 'D':
+                        f = redFont
+                    elif id[0] == 'E':
+                        f = None
+                    else:
+                        f = greenFont
+                    writeCell(ws, rowCount, 'A', id, font=f)
+                    writeCell(ws, rowCount, 'B', k.text, align=wrap)
+                    if k.disabled:
+                        writeCell(ws, rowCount, 'C', 'disabled')
+                    else:
+                        writeCell(ws, rowCount, 'C', k.catnum)
                     kCount += 1
-                f.write('\n')  # A blank line
-            return (cCount, kCount)
+                    rowCount += 1
+                rowCount += 1  # Leave a blank line
+                writeCell(ws, rowCount, 'A', "DO NOT USE THIS ROW, "
+                          "INSERT NEW ROW AS NEEDED",
+                          font=grayFont, fill=grayFill)
+                ws.merge_cells(start_row=rowCount, end_row=rowCount,
+                               start_column=1, end_column=3)
+                rowCount += 1
+        print('Saving file: ', self.fileName)
+        wb.save(self.fileName)
+        return (cCount, kCount)
 
     def pprint(self):
         """

@@ -338,7 +338,10 @@ class Application(wx.Frame):
             kSizer = category.newSizer
             kColor = (0, 160, 0)
         # Get the next number for the correct keynote type
-        nextNum = kList[-1].num + 1
+        if kList:
+            nextNum = kList[-1].num + 1
+        else:
+            nextNum = 1
         # Make the keynote and append it to the appropriate list
         k = knm.Keynote(number=nextNum, kType=kType, category=category)
         kList.append(k)
