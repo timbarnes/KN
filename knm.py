@@ -1,4 +1,5 @@
 import os
+import time
 """
 Category and category group classes
 Keynote and keynote group classes
@@ -111,7 +112,15 @@ class keynoteFile(object):
     fileName = None
     categories = []  # A list of categories, with keynotes attached
 
-    def load(self, keynoteFile):
+    def load(self, fileName, fileType):
+        if fileType == 'Text':
+            self.loadTxt(fileName)
+        elif fileType == 'Excel':
+            self.loadXlsx(fileName)
+        else:
+            print('Bad fileType', fileType)
+
+    def loadTxt(self, keynoteFile):
         """
         Load in a file full of keynotes and return categories and keynotes.
         """
@@ -149,12 +158,48 @@ class keynoteFile(object):
 
     def saveTxt(self):
         """
-        Write out the keynote data in the record.
+        Write out the keynote data in the record to a tab-delimited file.
         Assumes any updates to the record have already been made.
         """
-        # self.pprint()
+        # Make sure the filename ends in .xlsx, changing it if necessary
+        self.fileName = self.fileName.rsplit('.', 1)[0] + '.txt'
         # Create a backup copy of the file
-        os.rename(self.fileName, self.fileName + '~')
+        if os.path.isfile(self.fileName):
+            os.rename(self.fileName, self.fileName +
+                      '.' + str(int(time.time())))
+        with open(self.fileName, 'w+') as f:
+            cCount = 0
+            kCount = 0
+            for c in self.categories:
+                f.write("{}\t{}".format(c.num, c.name))
+                f.write('\n')
+                cCount += 1
+            f.write('\n')  # A blank line
+            for c in self.categories:
+                for k in c.allKeynotes():
+                    f.write(k.fullstring())
+                    f.write('\n')
+                    kCount += 1
+                f.write('\n')  # A blank line
+            return (cCount, kCount)
+
+    def loadXlsx(self, keynoteFile):
+        """
+        Load in an Excel keynote fileand return categories and keynotes.
+        """
+        pass
+
+    def saveXlsx(self):
+        """
+        Write out the keynote data in the record to a spreadsheet.
+        Assumes any updates to the record have already been made.
+        """
+        # Make sure the filename ends in .xlsx, changing it if necessary
+        self.fileName = self.fileName.rsplit('.', 1)[0] + '.xlsx'
+        # Create a backup copy of the file
+        if os.path.isfile(self.fileName):
+            os.rename(self.fileName, self.fileName +
+                      '.' + str(int(time.time())))
         with open(self.fileName, 'w+') as f:
             cCount = 0
             kCount = 0

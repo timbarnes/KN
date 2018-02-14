@@ -58,9 +58,12 @@ class Application(wx.Frame):
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
         # Create the search box and save button(s)
-        self.loadText = wx.Button(self.panel, label="Load keynotes:")
-        self.loadText.Bind(wx.EVT_BUTTON, self.onOpen)
+        self.loadText = wx.Button(self.panel, label="Load .txt:")
+        self.loadText.Bind(wx.EVT_BUTTON, self.onOpenTxt)
         self.commands.Add(self.loadText, 0, wx.ALL, 8)
+        self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
+        self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
+        self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
         sPrompt = wx.StaticText(self.panel, label="Filter:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
@@ -181,12 +184,32 @@ class Application(wx.Frame):
             event.GetEventObject().SetLabelText('Show Inactive')
             self.inactiveHidden = True
 
-    def onOpen(self, event):
+    def onOpenTxt(self, event):
         """
-        Open a keynote file.
+        Open a text file
         """
+        self.openFile('Text')
+
+    def onOpenXlsx(self, event):
+        """
+        Open an Excel file
+        """
+        self.openFile('Excel')
+
+    def openFile(self, fileType):
+        """
+        Open a keynote file, calling the appropriate loader based on fileType.
+        """
+        if fileType == 'Excel':
+            wc = "xlsx files (*.xlsx|*.xlsx"  # Wildcard
+        elif fileType == 'Text':
+            wc = "txt files (*.txt|*.txt"
+        else:
+            self.error("Save: filetype error")
+            return
+        # We're ready to load the file
         with wx.FileDialog(self, "Open keynote text file",
-                           wildcard="txt files (*.txt|*.txt",
+                           wildcard=wc,
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) \
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -194,7 +217,7 @@ class Application(wx.Frame):
             # Make a keynoteFile object and populate
             self.keynoteFile = knm.keynoteFile()
             try:
-                self.keynoteFile.load(fileDialog.GetPath())
+                self.keynoteFile.load(fileDialog.GetPath(), fileType)
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
