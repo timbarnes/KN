@@ -147,7 +147,7 @@ class keynoteFile(object):
         # self.pprint()
         return self.categories
 
-    def save(self):
+    def saveTxt(self):
         """
         Write out the keynote data in the record.
         Assumes any updates to the record have already been made.

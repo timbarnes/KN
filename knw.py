@@ -69,9 +69,10 @@ class Application(wx.Frame):
         self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilter)
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
-        self.saveText.Bind(wx.EVT_BUTTON, self.onSave)
+        self.saveText.Bind(wx.EVT_BUTTON, self.onSaveTxt)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
+        self.saveXlsx.Bind(wx.EVT_BUTTON, self.onSaveXlsx)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
         # Create the Add keynote sizer
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -205,14 +206,25 @@ class Application(wx.Frame):
             else:
                 self.error("No records found")
 
-    def onSave(self, event):
+    def onSaveTxt(self, event):
         """
         Write out the keynotes file.
         """
 
-        self.msg("Saving file {}".format(self.keynoteFile.fileName))
+        self.msg("Saving text file {}".format(self.keynoteFile.fileName))
         # Move the old file before overwriting
-        r = self.keynoteFile.save()
+        r = self.keynoteFile.saveTxt()
+        self.msg("Saved {} categories; {} keynotes".format(*r))
+        self.fileEdited = False
+
+    def onSaveXlsx(self, event):
+        """
+        Write out the keynotes file as a spreadsheet.
+        """
+
+        self.msg("Saving Excel file {}".format(self.keynoteFile.fileName))
+        # Move the old file before overwriting
+        r = self.keynoteFile.saveXlsx()
         self.msg("Saved {} categories; {} keynotes".format(*r))
         self.fileEdited = False
 
