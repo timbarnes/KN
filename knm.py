@@ -289,6 +289,7 @@ class keynoteFile(object):
         # Now write keynotes
         for c in self.categories:
             writeCell(ws, rowCount, 'A', c.name.upper(), font=boldFont)
+            startRow = rowCount  # First row in outline
             rowCount += 1
             for kt in (c.demoKeynotes, c.existingKeynotes, c.newKeynotes):
                 for k in kt:
@@ -308,11 +309,13 @@ class keynoteFile(object):
                     kCount += 1
                     rowCount += 1
                 rowCount += 1  # Leave a blank line
+                endRow = rowCount
                 writeCell(ws, rowCount, 'A', "DO NOT USE THIS ROW, "
                           "INSERT NEW ROW AS NEEDED",
                           font=grayFont, fill=grayFill)
                 ws.merge_cells(start_row=rowCount, end_row=rowCount,
                                start_column=1, end_column=3)
+                # Create outline for current category
                 rowCount += 1
         print('Saving file: ', self.fileName)
         wb.save(self.fileName)
