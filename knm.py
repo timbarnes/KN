@@ -1,5 +1,8 @@
 import os
+import shutil
 import time
+from getpass import getuser
+
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.styles.colors import RED, GREEN
@@ -45,8 +48,11 @@ class Category(object):
     def fullstring(self):
         return "{}\t{}".format(self.num, self.name)
 
-    def __str__(self):
+    def __repr__(self):
         return "Category({}, {})".format(self.name, self.num)
+
+    def __str__(self):
+        return "Category {}: {})".format(self.num, self.name)
 
 
 class Keynote(object):
@@ -99,6 +105,9 @@ class Keynote(object):
                                        self.category.num)
 
     def __str__(self):
+        self.fullstring(self)
+
+    def __repr__(self):
         if self.disabled:
             cat = 'disabled'
         else:
@@ -112,65 +121,103 @@ class keynoteFile(object):
     """
     A record containing all the data for a keynote file.
     """
-    fileName = None
+    fileName = None   # Store the original filename
+    user = getuser()  # We use the username for the lock
+    modified = False  # Marker tells us if the file content has been changed
     categories = []  # A list of categories, with keynotes attached
 
+    def lockedName(self, name):
+        parts = name.rsplit('.', 1)
+        return parts[0] + '_' + self.user + '.' + parts[1]
+
+    def lockFile(self, name):
+        """
+        Make a backup then lock the file (via copy)
+        """
+        result = os.path.isfile(name)
+        if result:
+            shutil.copy(name, name + '.' + str(int(time.time())))
+            os.rename(name, self.lockedName(name))
+            self.fileName = name
+        return result  # Will be False if there's no file
+
+    def unlockFile(self, name):
+        result = os.path.isfile(self.lockedName(name))
+        if result:
+            os.rename(self.lockedName(name), name)
+        self.fileName = None
+        return result  # Can't unlock non-existent file
+
+    def checkLock(self, fileName=None):
+        """
+        Before opening or saving a file, create and/or release a lock.
+        Save check is implemented through the GUI.
+        """
+        if self.fileName is not None:  # We have a file already open
+            # Unlock self.fileName
+            return self.unlockFile(fileName)
+        if fileName is not None:
+            # Lock the new file
+            return self.lockFile(fileName)
+
     def load(self, fileName, fileType):
-        if fileType == 'Text':
-            self.loadTxt(fileName)
-        elif fileType == 'Excel':
-            self.loadXlsx(fileName)
+        """
+        Load the new file. Locks only apply to the spreadsheet.
+        """
+        # if fileType == 'Text':
+        #     self.loadTxt(self.lockedName(fileName))
+        if fileType == 'Excel':
+            if self.checkLock(fileName):
+                self.loadXlsx(self.lockedName(fileName))
+            else:
+                print('File not found', fileName)
         else:
             print('Bad fileType', fileType)
 
-    def loadTxt(self, keynoteFile):
-        """
-        Load in a file full of keynotes and return categories and keynotes.
-        """
-        # Clear out any existing categories or keynotes
-        self.categories = []
-        keynoteList = []
-        # Load in the new stuff
-        with open(keynoteFile, "r") as f:
-            # Save the filename now that we know it opened OK
-            self.fileName = keynoteFile
-            line = f.readline()
-            while line != '':  # Empty string means end of file
-                line = line.rstrip('\t \n')
-                ll = line.split('\t')
-                # print(ll)
-                if len(ll) == 2:
-                    self.categories.append(Category(ll[0], ll[1]))
-                elif len(ll) == 3:
-                    keynoteList.append(Keynote(numString=ll[0], kText=ll[1],
-                                               catString=ll[2]))
-                else:
-                    print("Ignoring line <{}>".format(line))
-                line = f.readline()
-
-            print("{} categories found.".format(len(self.categories)))
-            print("{} keynotes found".format(len(keynoteList)))
-            for c in self.categories:
-                # Attach keynotes to categories correctly
-                for k in keynoteList:
-                    if k.catnum == c.num:
-                        k.category = c
-                        c.addKeynote(k)
-        # self.pprint()
-        return self.categories
+    # def loadTxt(self, keynoteFile):
+    #     """
+    #     Load in a file full of keynotes and return categories and keynotes.
+    #     """
+    #     # Clear out any existing categories or keynotes
+    #     self.categories = []
+    #     keynoteList = []
+    #     # Load in the new stuff
+    #     with open(keynoteFile, "r") as f:
+    #         # Save the filename now that we know it opened OK
+    #         self.fileName = keynoteFile
+    #         line = f.readline()
+    #         while line != '':  # Empty string means end of file
+    #             line = line.rstrip('\t \n')
+    #             ll = line.split('\t')
+    #             # print(ll)
+    #             if len(ll) == 2:
+    #                 self.categories.append(Category(ll[0], ll[1]))
+    #             elif len(ll) == 3:
+    #                 keynoteList.append(Keynote(numString=ll[0], kText=ll[1],
+    #                                            catString=ll[2]))
+    #             else:
+    #                 print("Ignoring line <{}>".format(line))
+    #             line = f.readline()
+    #
+    #         print("{} categories found.".format(len(self.categories)))
+    #         print("{} keynotes found".format(len(keynoteList)))
+    #         for c in self.categories:
+    #             # Attach keynotes to categories correctly
+    #             for k in keynoteList:
+    #                 if k.catnum == c.num:
+    #                     k.category = c
+    #                     c.addKeynote(k)
+    #     # self.pprint()
+    #     return self.categories
 
     def saveTxt(self):
         """
-        Write out the keynote data in the record to a tab-delimited file.
-        Assumes any updates to the record have already been made.
+        Write out the keynote data in the record to a tab - delimited file.
         """
         # Make sure the filename ends in .xlsx, changing it if necessary
-        self.fileName = self.fileName.rsplit('.', 1)[0] + '.txt'
-        # Create a backup copy of the file
-        if os.path.isfile(self.fileName):
-            os.rename(self.fileName, self.fileName +
-                      '.' + str(int(time.time())))
-        with open(self.fileName, 'w+') as f:
+        txtFileName = self.fileName.rsplit('.', 1)[0] + '.txt'
+        print('Saving file: {}', txtFileName)
+        with open(txtFileName, 'w+') as f:
             cCount = 0
             kCount = 0
             for c in self.categories:
@@ -196,8 +243,6 @@ class keynoteFile(object):
         except Exception as e:
             print('Excel open failed: {}', e)
             return False
-        # Save the filename now that we know it opened OK
-        self.fileName = keynoteFile
         # Assume first tab holds the Data
         rows = tuple(self.workbook.active.rows)
         keynoteList = []
@@ -248,11 +293,7 @@ class keynoteFile(object):
                 worksheet[addr].alignment = align
 
         # Make sure the filename ends in .xlsx, changing it if necessary
-        self.fileName = self.fileName.rsplit('.', 1)[0] + '.xlsx'
-        # Create a backup copy of the file
-        if os.path.isfile(self.fileName):
-            os.rename(self.fileName, self.fileName +
-                      '.' + str(int(time.time())))
+        fileName = self.lockedName(self.fileName)
         # Create a new workbook and worksheet
         wb = Workbook()
         ws = wb.active
@@ -289,7 +330,7 @@ class keynoteFile(object):
         # Now write keynotes
         for c in self.categories:
             writeCell(ws, rowCount, 'A', c.name.upper(), font=boldFont)
-            startRow = rowCount  # First row in outline
+            # startRow = rowCount  # First row in outline
             rowCount += 1
             for kt in (c.demoKeynotes, c.existingKeynotes, c.newKeynotes):
                 for k in kt:
@@ -308,8 +349,8 @@ class keynoteFile(object):
                         writeCell(ws, rowCount, 'C', k.catnum)
                     kCount += 1
                     rowCount += 1
+                # endRow = rowCount
                 rowCount += 1  # Leave a blank line
-                endRow = rowCount
                 writeCell(ws, rowCount, 'A', "DO NOT USE THIS ROW, "
                           "INSERT NEW ROW AS NEEDED",
                           font=grayFont, fill=grayFill)
@@ -317,8 +358,8 @@ class keynoteFile(object):
                                start_column=1, end_column=3)
                 # Create outline for current category
                 rowCount += 1
-        print('Saving file: ', self.fileName)
-        wb.save(self.fileName)
+        print('Saving file: ', fileName)
+        wb.save(fileName)
         return (cCount, kCount)
 
     def pprint(self):

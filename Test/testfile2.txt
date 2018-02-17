@@ -4,7 +4,7 @@
 3	Walls
 4	Roof
 
-D0001	Demo 1	disabled
+D0001	DEMO 1	disabled
 D0002	Demo 2	0
 E0001	Existing 1	0
 E0002	Existing 2	disabled

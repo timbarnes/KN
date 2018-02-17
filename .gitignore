@@ -1,6 +1,6 @@
 .direnv
 .envrc
 *~
-*.xlsx.*
-*.txt.*
+*.xlsx*
+*.txt*
 *.pyc

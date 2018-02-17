@@ -58,9 +58,9 @@ class Application(wx.Frame):
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
         # Create the search box and save button(s)
-        self.loadText = wx.Button(self.panel, label="Load .txt:")
-        self.loadText.Bind(wx.EVT_BUTTON, self.onOpenTxt)
-        self.commands.Add(self.loadText, 0, wx.ALL, 8)
+        # self.loadText = wx.Button(self.panel, label="Load .txt:")
+        # self.loadText.Bind(wx.EVT_BUTTON, self.onOpenTxt)
+        # self.commands.Add(self.loadText, 0, wx.ALL, 8)
         self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
         self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
         self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
@@ -77,6 +77,9 @@ class Application(wx.Frame):
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
         self.saveXlsx.Bind(wx.EVT_BUTTON, self.onSaveXlsx)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
+        self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
+        self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
+        self.commands.Add(self.closeXlsx, 0, wx.ALL, 8)
         # Create the Add keynote sizer
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
@@ -253,15 +256,27 @@ class Application(wx.Frame):
 
     def onClose(self, event):
         """
+        If a file is open and there are changes, save it, then exit.
+        """
+        self.onCloseXlsx()
+        event.Skip()  # Exit
+
+    def onCloseXlsx(self, event=None):
+        """
         If file is unsaved, prompt for save.
         """
-        if event.CanVeto() and self.fileEdited:
+        if not self.keynoteFile:
+            return
+        if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
                              "Continue exiting?",
                              wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
-        event.Skip()
+        self.keynoteFile.unlockFile(self.keynoteFile.fileName)
+        self.cleanUp()
+        self.keynoteFile = None
+        self.msg("Load a new file or exit.")
 
     def onAddDemo(self, event):
         """
@@ -381,6 +396,24 @@ class Application(wx.Frame):
         k.disabledWidget = kd
         return kSizer
 
+    def cleanUp(self):
+        """
+        Destroy the current widget set
+        """
+        if self.keynoteFile:
+            if self.keynoteFile.categories:
+                for c in self.keynoteFile.categories:
+                    for k in c.allKeynotes():
+                        k.numberWidget.Destroy()
+                        k.textWidget.Destroy()
+                        k.disabledWidget.Destroy()
+        notebook = self.categoryNotebook
+        # If there was a file previously loaded, delete its pages and widgets
+        if notebook:
+            while notebook.GetPageCount():
+                notebook.DeletePage(0)
+        self.panel.Layout()
+
     def buildEditor(self):
         """
         Create the widgets for keynotes under category tabs in the notebook
@@ -397,10 +430,6 @@ class Application(wx.Frame):
             return sizer
 
         notebook = self.categoryNotebook
-        # If there was a file previously loaded, delete its pages and widgets
-        while notebook.GetPageCount():
-            notebook.DeletePage(0)
-
         for c in self.keynoteFile.categories:  # Original data from the file
             # print("Building category {}".format(c))  # A category
             # Create a new page (frame), add it to the notebook
