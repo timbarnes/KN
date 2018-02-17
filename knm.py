@@ -10,6 +10,9 @@ from openpyxl.styles.colors import RED, GREEN
 Category and category group classes
 Keynote and keynote group classes
 File I/O
+
+Spreadsheet file is the master file and is used for loading.
+.txt file can be saved, as can the spreadsheet.
 """
 
 
@@ -42,9 +45,11 @@ class Category(object):
         else:
             self.newKeynotes.append(keynote)
 
-    def allKeynotes(self):
+    @property
+    def keynotes(self):
         return self.demoKeynotes + self.existingKeynotes + self.newKeynotes
 
+    @property
     def fullstring(self):
         return "{}\t{}".format(self.num, self.name)
 
@@ -94,18 +99,20 @@ class Keynote(object):
             self.disabled = False
         # print(self)
 
+    @property
     def identifier(self):
         return "{}{:02d}{:02d}".format(self.den, self.catnum, self.num)
 
+    @property
     def fullstring(self):
         if self.disabled:
-            return "{}\t{}\tdisabled".format(self.identifier(), self.text)
+            return "{}\t{}\tdisabled".format(self.identifier, self.text)
         else:
-            return "{}\t{}\t{}".format(self.identifier(), self.text,
+            return "{}\t{}\t{}".format(self.identifier, self.text,
                                        self.category.num)
 
     def __str__(self):
-        self.fullstring(self)
+        self.fullstring
 
     def __repr__(self):
         if self.disabled:
@@ -113,7 +120,7 @@ class Keynote(object):
         else:
             cat = self.catnum
         return ("Keynote(numString={}, "
-                "kText='{}', catString={})".format(self.identifier(),
+                "kText='{}', catString={})".format(self.identifier,
                                                    self.text, cat))
 
 
@@ -226,8 +233,8 @@ class keynoteFile(object):
                 cCount += 1
             f.write('\n')  # A blank line
             for c in self.categories:
-                for k in c.allKeynotes():
-                    f.write(k.fullstring())
+                for k in c.keynotes:
+                    f.write(k.fullstring)
                     f.write('\n')
                     kCount += 1
                 f.write('\n')  # A blank line
@@ -334,7 +341,7 @@ class keynoteFile(object):
             rowCount += 1
             for kt in (c.demoKeynotes, c.existingKeynotes, c.newKeynotes):
                 for k in kt:
-                    id = k.identifier()
+                    id = k.identifier
                     if id[0] == 'D':
                         f = redFont
                     elif id[0] == 'E':
@@ -367,6 +374,6 @@ class keynoteFile(object):
         Print a human readable version of the keynoteFile record.
         """
         for c in self.categories:
-            print(c.fullstring())
-            for k in c.allKeynotes():
-                print("- {}".format(k.fullstring()))
+            print(c.fullstring)
+            for k in c.keynotes:
+                print("- {}".format(k.fullstring))

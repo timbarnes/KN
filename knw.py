@@ -143,14 +143,14 @@ class Application(wx.Frame):
                 for c in self.keynoteFile.categories:
                     self.categoryNotebook.EnableTab(n, True)
                     n += 1
-                    for k in (c.allKeynotes()):
+                    for k in (c.keynotes):
                         self.unHideKeynote(k)
                     c.pageWidget.Layout()
                 return
             n = 0
             for c in self.keynoteFile.categories:
                 found = False
-                for k in c.allKeynotes():
+                for k in c.keynotes:
                     ktext = k.textWidget.GetValue()
                     if ktext.upper().count(ss.upper()) > 0:
                         found = True
@@ -172,7 +172,7 @@ class Application(wx.Frame):
         """
         if self.inactiveHidden:
             for c in self.keynoteFile.categories:
-                for k in c.allKeynotes():
+                for k in c.keynotes:
                     if k.disabled:
                         self.unHideKeynote(k)
                 c.pageWidget.Layout()
@@ -180,7 +180,7 @@ class Application(wx.Frame):
             self.inactiveHidden = False
         else:
             for c in self.keynoteFile.categories:
-                for k in c.allKeynotes():
+                for k in c.keynotes:
                     if k.disabled:
                         self.hideKeynote(k)
                 c.pageWidget.Layout()
@@ -331,7 +331,7 @@ class Application(wx.Frame):
             w.SetValue(s)       # Save it back to the widget
             yDepth = 20 * max(len(s) / 75, 2)
             w.SetMinSize(wx.Size(200, yDepth))
-            self.msg("Updating text: {}".format(w.keynote.fullstring()))
+            self.msg("Updating text: {}".format(w.keynote.fullstring))
             self.fileEdited = True
             self.currentCategory.pageWidget.Layout()
 
@@ -372,7 +372,7 @@ class Application(wx.Frame):
         """Create a row for a keynote"""
         # print("Building keynote {}".format(k))
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
-        id = k.identifier()
+        id = k.identifier
         kn = wx.StaticText(page, label=id)
         kn.SetMinSize(wx.Size(50, 16))
         kn.SetForegroundColour(color)
@@ -403,7 +403,7 @@ class Application(wx.Frame):
         if self.keynoteFile:
             if self.keynoteFile.categories:
                 for c in self.keynoteFile.categories:
-                    for k in c.allKeynotes():
+                    for k in c.keynotes:
                         k.numberWidget.Destroy()
                         k.textWidget.Destroy()
                         k.disabledWidget.Destroy()
