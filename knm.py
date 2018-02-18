@@ -152,7 +152,8 @@ class keynoteFile(object):
         result = os.path.isfile(self.lockedName(name))
         if result:
             os.rename(self.lockedName(name), name)
-        self.fileName = None
+        self.fileName = None  # Blank out the closed file
+        self.categories = None  # Blank out the loaded content
         return result  # Can't unlock non-existent file
 
     def checkLock(self, fileName=None):
