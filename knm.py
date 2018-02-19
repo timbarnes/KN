@@ -44,6 +44,7 @@ class Category(object):
             self.existingKeynotes.append(keynote)
         else:
             self.newKeynotes.append(keynote)
+        keynote.category = self
 
     @property
     def keynotes(self):

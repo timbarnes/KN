@@ -37,9 +37,25 @@ def test_category():
         c = knm.Category('bar', 12)
 
 
+def test_keynote():
+    c = knm.Category(12, 'Testing')
+    k1 = knm.Keynote(number=12, kType='E', category=c,
+                     disabled=True, kText='Keynote 1')
+    k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='Testing')
+    c.addKeynote(k1)
+    c.addKeynote(k2)
+    assert len(c.keynotes) == 2
+    assert c.demoKeynotes[0].text == 'Keynote 2'
+    assert c.existingKeynotes[0].text == 'Keynote 1'
+    assert c.newKeynotes == []
+    assert c.existingKeynotes[0].category == c
+    assert c.demoKeynotes[0].category == c
+
+
 def test_load():
     kf = knm.keynoteFile()
     kf.load('testfile2.xlsx', 'Excel')
+    assert os.path.isfile('testfile2_tim.xlsx')
     assert kf is not None
     assert kf.fileName == 'testfile2.xlsx'
     assert os.path.isfile(kf.lockedName(kf.fileName))
