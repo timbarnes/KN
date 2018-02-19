@@ -51,7 +51,7 @@ class Application(wx.Frame):
         # Add a button so it looks correct on all platforms
         self.panel = wx.Panel(self, wx.ID_ANY)
         # Status bar for messages
-        self.sb = self.CreateStatusBar(2, -2, -1)
+        self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Simple keynote editor", 0)
         # Create the sizers
         self.mainBox = wx.BoxSizer(wx.VERTICAL)

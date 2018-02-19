@@ -57,7 +57,7 @@ class Category(object):
         return "Category({}, {})".format(self.name, self.num)
 
     def __str__(self):
-        return "Category {}: {})".format(self.num, self.name)
+        return "Category {}: {}".format(self.num, self.name)
 
 
 class Keynote(object):
