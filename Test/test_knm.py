@@ -41,10 +41,12 @@ def test_keynote():
     c = knm.Category(12, 'Testing')
     k1 = knm.Keynote(number=12, kType='E', category=c,
                      disabled=True, kText='Keynote 1')
-    k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='Testing')
+    k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='12')
     c.addKeynote(k1)
     c.addKeynote(k2)
     assert len(c.keynotes) == 2
+    assert c.existingKeynotes[0] == k1
+    assert c.demoKeynotes[0] == k2
     assert c.demoKeynotes[0].text == 'Keynote 2'
     assert c.existingKeynotes[0].text == 'Keynote 1'
     assert c.newKeynotes == []
