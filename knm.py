@@ -39,11 +39,16 @@ class Category(object):
         Add a keynote into the correct category
         """
         if keynote.den == 'D':
+            nextNum = len(self.demoKeynotes)
             self.demoKeynotes.append(keynote)
         elif keynote.den == 'E':
+            nextNum = len(self.existingKeynotes)
             self.existingKeynotes.append(keynote)
         else:
+            nextNum = len(self.newKeynotes)
             self.newKeynotes.append(keynote)
+        keynote.num = nextNum
+        keynote.catnum = self.num
         keynote.category = self
 
     @property
@@ -66,20 +71,18 @@ class Keynote(object):
     Information for a single keynote.
     """
 
-    def __init__(self, number=None, kType=None, category=None,
-                 disabled=False,
+    def __init__(self, number=None, kType=None, disabled=False,
                  numString=None, kText='<Empty>', catString=None):
         """
-        Build a Keynote from a number (as string), kText and category no.
+        Build a Keynote.
         """
-        if number and kType and category:
+        if kType:
             # Build from scratch using num and kType
             self.den = kType  # D, E or N
-            self.catnum = category.num
-            self.num = number
+            if number:
+                self.num = number
             self.text = kText
             self.disabled = disabled
-            self.category = category
             # print(self)
             return
         # We are building from a line in a file
@@ -89,8 +92,6 @@ class Keynote(object):
             self.den = numString[0]   # First character is D, E, or N
             self.catnum = int(numString[1:3])  # Category Number
             self.num = int(numString[3:6])
-            if category:
-                self.category = category
         else:
             print("Bad number string: <{}>".format(numString))
         self.text = kText

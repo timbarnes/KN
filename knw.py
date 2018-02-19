@@ -341,25 +341,17 @@ class Application(wx.Frame):
         """
         category = self.currentCategory
         if kType == 'D':
-            kList = category.demoKeynotes
             kSizer = category.demoSizer
             kColor = (180, 0, 0)
         elif kType == 'E':
-            kList = category.existingKeynotes
             kSizer = category.existingSizer
             kColor = (0, 0, 0)
         else:
-            kList = category.newKeynotes
             kSizer = category.newSizer
             kColor = (0, 160, 0)
-        # Get the next number for the correct keynote type
-        if kList:
-            nextNum = kList[-1].num + 1
-        else:
-            nextNum = 1
         # Make the keynote and append it to the appropriate list
-        k = knm.Keynote(number=nextNum, kType=kType, category=category)
-        kList.append(k)
+        k = knm.Keynote(kType=kType)
+        category.addKeynote(k)
         # print(k)
         # Build the keynote widgets and add to the sizer
         sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)

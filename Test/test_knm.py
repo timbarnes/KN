@@ -39,12 +39,13 @@ def test_category():
 
 def test_keynote():
     c = knm.Category(12, 'Testing')
-    k1 = knm.Keynote(number=12, kType='E', category=c,
-                     disabled=True, kText='Keynote 1')
+    k1 = knm.Keynote(number=12, kType='E', disabled=True, kText='Keynote 1')
     k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='12')
+    k3 = knm.Keynote(numString='D1202', kText='Keynote 3', catString='12')
     c.addKeynote(k1)
     c.addKeynote(k2)
-    assert len(c.keynotes) == 2
+    c.addKeynote(k3)
+    assert len(c.keynotes) == 3
     assert c.existingKeynotes[0] == k1
     assert c.demoKeynotes[0] == k2
     assert c.demoKeynotes[0].text == 'Keynote 2'
@@ -52,6 +53,8 @@ def test_keynote():
     assert c.newKeynotes == []
     assert c.existingKeynotes[0].category == c
     assert c.demoKeynotes[0].category == c
+    assert k1.disabled is True
+    assert k3.disabled is not True
 
 
 def test_load():
