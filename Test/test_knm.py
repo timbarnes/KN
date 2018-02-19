@@ -74,7 +74,7 @@ def test_load():
     assert kf.categories[4].demoKeynotes[1].disabled is True
     assert kf.unlockFile(kf.fileName)
     assert kf.fileName is None
-    assert kf.categories is None
+    assert kf.categories == []
 
 
 def teardown():

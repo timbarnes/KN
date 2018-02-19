@@ -1,8 +1,10 @@
+import logging
 import wx
 import wx.lib.agw.aui as aui
 import wx.lib.scrolledpanel as scrolled
 import knm
 
+logging.basicConfig(level=logging.DEBUG)
 # wxPython version refactored
 
 
@@ -112,13 +114,15 @@ class Application(wx.Frame):
         """
         Display in Status area.
         """
+        logging.info(message)
         self.sb.SetStatusText(message, field)
 
     def error(self, message):
         """
         Print an error.
         """
-        self.msg("Error: {}".format(message))
+        logging.error(message)
+        self.sb.SetStatusText(message, field)
 
     @staticmethod
     def hideKeynote(k):
@@ -136,7 +140,7 @@ class Application(wx.Frame):
         """
         Hide keynotes that don't match a search string.
         """
-        if event.GetKeyCode() == wx.WXK_RETURN:
+        if event.GetKeyCode() in [wx.WXK_RETURN, wx.WXK_TAB, wx.WXK_CONTROL_F]:
             ss = event.GetEventObject().GetValue()
             if ss == '':  # Show everything
                 n = 0
@@ -218,7 +222,12 @@ class Application(wx.Frame):
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             # Make a keynoteFile object and populate
-            self.keynoteFile = knm.keynoteFile()
+            if self.keynoteFile:
+                logging.debug('Deleting information from the old file')
+                self.cleanUp()
+            else:
+                logging.debug('Creating a new keynoteFile')
+                self.keynoteFile = knm.keynoteFile()
             try:
                 self.keynoteFile.load(fileDialog.GetPath(), fileType)
             except IOError:
@@ -254,12 +263,13 @@ class Application(wx.Frame):
         self.msg("Saved {} categories; {} keynotes".format(*r))
         self.fileEdited = False
 
-    def onClose(self, event):
+    def onClose(self, event=None):
         """
         If a file is open and there are changes, save it, then exit.
         """
         self.onCloseXlsx()
-        event.Skip()  # Exit
+        if event:
+            event.Skip()  # Exit
 
     def onCloseXlsx(self, event=None):
         """
@@ -269,7 +279,7 @@ class Application(wx.Frame):
             return
         if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
-                             "Continue exiting?",
+                             "Continue?",
                              wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
@@ -317,6 +327,16 @@ class Application(wx.Frame):
         w = event.GetEventObject()
         w.keynote.disabled = w.GetValue()
         self.fileEdited = True
+
+    def onTab(self, event):
+        """
+        If key pressed was tab, move to next field and update text.
+        """
+        if event.GetKeyCode() == wx.WXK_TAB:
+            self.onTextChange(event)
+            event.EventObject.Navigate()
+        else:
+            event.Skip()
 
     def onTextChange(self, event):
         """
@@ -373,6 +393,7 @@ class Application(wx.Frame):
                          value=k.text)
         yDepth = 20 * max(len(k.text) / 75, 2)
         kt.SetMinSize(wx.Size(200, yDepth))
+        kt.Bind(wx.EVT_KEY_DOWN, self.onTab)
         kt.Bind(wx.EVT_KILL_FOCUS, self.onTextChange)
         kt.keynote = k
         kd = wx.CheckBox(page, label='Exclude')
@@ -405,6 +426,7 @@ class Application(wx.Frame):
             while notebook.GetPageCount():
                 notebook.DeletePage(0)
         self.panel.Layout()
+        self.keynoteFile.clear()
 
     def buildEditor(self):
         """
@@ -423,7 +445,7 @@ class Application(wx.Frame):
 
         notebook = self.categoryNotebook
         for c in self.keynoteFile.categories:  # Original data from the file
-            # print("Building category {}".format(c))  # A category
+            logging.debug(f"Building category page for {c.name}")  # A category
             # Create a new page (frame), add it to the notebook
             page = categoryPage(notebook, c)  # Make the page
             notebook.AddPage(page, c.name)
