@@ -370,7 +370,7 @@ class Application(wx.Frame):
             kSizer = category.newSizer
             kColor = (0, 160, 0)
         # Make the keynote and append it to the appropriate list
-        k = knm.Keynote(kType=kType)
+        k = knm.Keynote(kType=kType, category=category)
         category.addKeynote(k)
         # print(k)
         # Build the keynote widgets and add to the sizer

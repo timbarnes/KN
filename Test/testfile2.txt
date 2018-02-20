@@ -11,6 +11,7 @@ E0002	Existing 2	disabled
 E0003	<Empty>	0
 N0001	New 1	disabled
 N0002	<Empty>	0
+N0003	<Empty>	disabled
 
 D0101	DEMO SITE 1	1
 D0102	Demo Site 2	1

@@ -22,13 +22,13 @@ class Category(object):
     A Category holds three dictionaries of keynotes.
     """
 
-    def __init__(self, num, name):
+    def __init__(self, number, name):
         """
         Create category object
         """
         logging.debug("Creating category {}".format(name))
         self.name = name
-        self.num = int(num)
+        self.number = int(number)
         # Placeholders for keynotes to be added later
         self.demoKeynotes = []
         self.existingKeynotes = []
@@ -39,17 +39,14 @@ class Category(object):
         Add a keynote into the correct category
         """
         if keynote.den == 'D':
-            nextNum = len(self.demoKeynotes) + 1
             self.demoKeynotes.append(keynote)
         elif keynote.den == 'E':
-            nextNum = len(self.existingKeynotes)
             self.existingKeynotes.append(keynote)
         else:
-            nextNum = len(self.newKeynotes)
             self.newKeynotes.append(keynote)
-        if not keynote.num:
-            keynote.num = nextNum
-        keynote.catnum = self.num
+        if not keynote.number:
+            logging.error('Keynote number not provided.')
+        keynote.catnum = self.number
         keynote.category = self
 
     @property
@@ -58,13 +55,13 @@ class Category(object):
 
     @property
     def fullstring(self):
-        return "{}\t{}".format(self.num, self.name)
+        return "{}\t{}".format(self.number, self.name)
 
     def __repr__(self):
-        return "Category({}, {})".format(self.name, self.num)
+        return "Category({}, {})".format(self.name, self.number)
 
     def __str__(self):
-        return "Category {}: {}".format(self.num, self.name)
+        return "Category {}: {}".format(self.number, self.name)
 
 
 class Keynote(object):
@@ -72,57 +69,76 @@ class Keynote(object):
     Information for a single keynote.
     """
 
-    def __init__(self, number=None, kType=None, disabled=False,
+    def __init__(self, number=-1, kType=None, disabled=False, category=None,
                  numString=None, kText='<Empty>', catString=None):
         """
         Build a Keynote.
         """
-        if kType:
-            # Build from scratch using num and kType
-            self.den = kType  # D, E or N
-            if number:
-                self.num = number
-            self.text = kText
-            self.disabled = disabled
-            self.category = None
-            self.catnum = None
-            logging.debug(f'Created keynote: {self.fullstring}')
-            return
-        # We are building from a line in a file
-        if len(numString) == 5:
-            if not numString[0] in 'DEN':
-                logging.error(f"Bad first character: <{numString}>")
-            self.den = numString[0]   # First character is D, E, or N
-            self.catnum = int(numString[1:3])  # Category Number
-            self.num = int(numString[3:6])
-            self.category = None
-        else:
-            logging.error(f"Bad number string: <{numString}>")
-        self.text = kText
-        if catString == 'disabled':  # Keynote is Disabled
-            self.disabled = True
-        else:
+
+        def _from_file_data(self, num_string, text_string, cat_string):
+            """
+            Build based on input from a file.
+            """
+            if len(num_string) == 5:
+                if num_string[0] in 'DEN':
+                    self.den = num_string[0]   # First character is D, E, or N
+                    self.catnum = int(num_string[1:3])  # Category Number
+                    self.number = int(num_string[3:6])
+                    self.category = None
+                else:
+                    logging.error(f"Bad first character: <{numString}>")
+            else:
+                logging.error(f"Bad number string: <{numString}>")
+            self.text = text_string
+            self.disabled = cat_string == 'disabled'
+
+        def _insert_new(self, category, den):
+            """
+            Build a new keynote for a known category and type (DEN)
+            """
+            def _next_num(keynote_group):
+                if keynote_group == []:
+                    return 1
+                else:
+                    return keynote_group[-1].number + 1
+
+            self.text = '<Empty>'
             self.disabled = False
+            self.category = category
+            self.catnum = category.number
+            self.den = den
+            if den == 'D':
+                self.number = _next_num(category.demoKeynotes)
+            elif den == 'E':
+                self.number = _next_num(category.existingKeynotes)
+            elif den == 'N':
+                self.number = _next_num(category.newKeynotes)
+            else:
+                logging.error(f'Bad keynote type: {den}')
+
+        if numString and kText and catString:
+            _from_file_data(self, numString, kText, catString)
+        elif kType and category:
+            _insert_new(self, category, kType)
+        else:
+            logging.error('Keynote improper arguments')
+            return
         logging.debug(f'Created keynote: {self.fullstring}')
 
     @property
     def identifier(self):
-        if self.catnum:
-            cn = self.catnum
-        else:
-            cn = 99
-        return "{}{:02d}{:02d}".format(self.den, cn, self.num)
+        return "{}{:02d}{:02d}".format(self.den, self.catnum, self.number)
 
     @property
     def fullstring(self):
         if self.disabled:
             d = 'disabled'
         elif self.category:
-            d = self.category.num
+            d = self.category.number
         else:
             d = '-'
-        if self.num:
-            n = self.num
+        if self.number is not None:
+            n = self.number
         else:
             n = '-'
         return f"{self.identifier}\t{self.text}\t{d}"
@@ -239,7 +255,7 @@ class keynoteFile(object):
     #         for c in self.categories:
     #             # Attach keynotes to categories correctly
     #             for k in keynoteList:
-    #                 if k.catnum == c.num:
+    #                 if k.catnum == c.number:
     #                     k.category = c
     #                     c.addKeynote(k)
     #     # self.pprint()
@@ -256,7 +272,7 @@ class keynoteFile(object):
             cCount = 0
             kCount = 0
             for c in self.categories:
-                f.write("{}\t{}".format(c.num, c.name))
+                f.write("{}\t{}".format(c.number, c.name))
                 f.write('\n')
                 cCount += 1
             f.write('\n')  # A blank line
@@ -302,7 +318,7 @@ class keynoteFile(object):
         for c in self.categories:
             # Attach keynotes to categories correctly
             for k in keynoteList:
-                if k.catnum == c.num:
+                if k.catnum == c.number:
                     k.category = c
                     c.addKeynote(k)
         # self.pprint()
@@ -349,7 +365,7 @@ class keynoteFile(object):
         # Loop through writing categories
         for c in self.categories:
             # Write a category record
-            writeCell(ws, rowCount, 'A', c.num)
+            writeCell(ws, rowCount, 'A', c.number)
             writeCell(ws, rowCount, 'B', c.name)
             cCount += 1
             rowCount += 1
