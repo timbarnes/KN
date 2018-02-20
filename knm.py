@@ -55,13 +55,13 @@ class Category(object):
 
     @property
     def fullstring(self):
-        return "{}\t{}".format(self.number, self.name)
+        return f"{self.number}\t{self.name}"
 
     def __repr__(self):
-        return "Category({}, {})".format(self.name, self.number)
+        return f"Category({self.name}, {self.number})"
 
     def __str__(self):
-        return "Category {}: {}".format(self.number, self.name)
+        return f"Category {self.number}: {self.name}"
 
 
 class Keynote(object):
@@ -151,9 +151,8 @@ class Keynote(object):
             cat = 'disabled'
         else:
             cat = self.catnum
-        return ("Keynote(numString={}, "
-                "kText='{}', catString={})".format(self.identifier,
-                                                   self.text, cat))
+        return (f"Keynote(numString={self.identifier}, "
+                "kText='{self.text}', catString={cat})")
 
 
 class keynoteFile(object):
@@ -313,8 +312,8 @@ class keynoteFile(object):
                 logging.error("Can't process /{}/{}/{}/".format(row[0].value,
                                                                 row[1].value,
                                                                 row[2].value))
-        logging.info("{} categories found.".format(len(self.categories)))
-        logging.info("{} keynotes found".format(len(keynoteList)))
+        logging.info(f"{len(self.categories)} categories found.")
+        logging.info(f"{len(keynoteList)} keynotes found")
         for c in self.categories:
             # Attach keynotes to categories correctly
             for k in keynoteList:
@@ -334,7 +333,7 @@ class keynoteFile(object):
             """
             row is a number, col is a letter
             """
-            addr = '{}{}'.format(col, row)
+            addr = f'{col}{row}'
             logging.debug(f'Writing {val} into cell {addr}')
             worksheet[addr] = val
             if font:
@@ -422,4 +421,4 @@ class keynoteFile(object):
         for c in self.categories:
             print(c.fullstring)
             for k in c.keynotes:
-                print("- {}".format(k.fullstring))
+                print(f"- {k.fullstring}")

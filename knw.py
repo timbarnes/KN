@@ -351,7 +351,7 @@ class Application(wx.Frame):
             w.SetValue(s)       # Save it back to the widget
             yDepth = 20 * max(len(s) / 75, 2)
             w.SetMinSize(wx.Size(200, yDepth))
-            self.msg("Updating text: {}".format(w.keynote.fullstring))
+            self.msg(f"Updating text: {w.keynote.fullstring}")
             self.fileEdited = True
             self.currentCategory.pageWidget.Layout()
 
