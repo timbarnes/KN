@@ -38,13 +38,24 @@ def test_category():
 
 
 def test_keynote():
+
     c = knm.Category(12, 'Testing')
-    k1 = knm.Keynote(number=12, kType='E', disabled=True, kText='Keynote 1')
+    k1 = knm.Keynote(number=1, kType='E', disabled=True, kText='Keynote 1')
     k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='12')
     k3 = knm.Keynote(numString='D1202', kText='Keynote 3', catString='12')
     c.addKeynote(k1)
     c.addKeynote(k2)
     c.addKeynote(k3)
+    assert k1.num == 1
+    assert k1.text == 'Keynote 1'
+    assert k1.disabled
+    assert k2.num == 1
+    assert k2.text == 'Keynote 2'
+    assert k2.disabled is not True
+    assert k3.num == 2
+    assert k3.text == 'Keynote 3'
+    assert k3.disabled is not True
+    assert k3.catnum == 12
     assert len(c.keynotes) == 3
     assert c.existingKeynotes[0] == k1
     assert c.demoKeynotes[0] == k2
@@ -70,6 +81,9 @@ def test_load():
     assert kf.categories[2].name == 'Floor'
     for i, n in zip(range(5), [7, 18, 9, 7, 7]):
         assert len(kf.categories[i].keynotes) == n
+        assert kf.categories[i].demoKeynotes[0].num == 1
+        assert kf.categories[i].existingKeynotes[0].num == 1
+        assert kf.categories[i].newKeynotes[0].num == 1
     assert kf.categories[4].demoKeynotes[1].text == 'Demo 2'
     assert kf.categories[4].demoKeynotes[1].disabled is True
     assert kf.unlockFile(kf.fileName)

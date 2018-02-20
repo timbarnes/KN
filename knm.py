@@ -39,7 +39,7 @@ class Category(object):
         Add a keynote into the correct category
         """
         if keynote.den == 'D':
-            nextNum = len(self.demoKeynotes)
+            nextNum = len(self.demoKeynotes) + 1
             self.demoKeynotes.append(keynote)
         elif keynote.den == 'E':
             nextNum = len(self.existingKeynotes)
@@ -47,7 +47,8 @@ class Category(object):
         else:
             nextNum = len(self.newKeynotes)
             self.newKeynotes.append(keynote)
-        keynote.num = nextNum
+        if not keynote.num:
+            keynote.num = nextNum
         keynote.catnum = self.num
         keynote.category = self
 
