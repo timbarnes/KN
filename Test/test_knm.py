@@ -3,6 +3,7 @@ import sys
 import os
 import glob
 import shutil
+import filecmp
 import pytest
 sys.path.insert(0, '..')
 import knm
@@ -41,14 +42,16 @@ def test_keynote():
 
     c = knm.Category(12, 'Testing')
     k1 = knm.Keynote(kType='E', category=c)
-    k2 = knm.Keynote(numString='D1201', kText='Keynote 2', catString='12')
-    k3 = knm.Keynote(numString='D1202', kText='Keynote 3', catString='disabled')
+    k2 = knm.Keynote(numString='D1201', kText='Keynote 2',
+                     catString='12')
+    k3 = knm.Keynote(numString='D1202', kText='Keynote 3',
+                     catString='disabled')
     c.addKeynote(k1)
     c.addKeynote(k2)
     c.addKeynote(k3)
     assert k1.number == 1
     assert k1.text == '<Empty>'
-    assert k1.disabled == False
+    assert not k1.disabled
     assert k2.number == 1
     assert k2.text == 'Keynote 2'
     assert k2.disabled is not True
@@ -86,7 +89,10 @@ def test_load():
         assert kf.categories[i].newKeynotes[0].number == 1
     assert kf.categories[4].demoKeynotes[1].text == 'Demo 2'
     assert kf.categories[4].demoKeynotes[1].disabled is True
+    assert kf.saveTxt() == (5, 48)
+    assert kf.saveXlsx() == (5, 48)
     assert kf.unlockFile(kf.fileName)
+    assert filecmp.cmp('testfile2.txt', 'testfile2_original.txt')
     assert kf.fileName is None
     assert kf.categories == []
 
@@ -95,5 +101,4 @@ def teardown():
     if os.path.isfile('testfile2_tim.xlsx'):
         os.remove('testfile2_tim.xlsx')
     for f in glob.glob('testfile2.xlsx.*'):
-        print(f'Removing {f}')
         os.remove(f)
