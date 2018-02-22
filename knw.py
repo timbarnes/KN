@@ -52,6 +52,7 @@ class Application(wx.Frame):
         """
         # Add a button so it looks correct on all platforms
         self.panel = wx.Panel(self, wx.ID_ANY)
+        self.panel.SetAutoLayout(True)
         # Status bar for messages
         self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Simple keynote editor", 0)
@@ -66,12 +67,16 @@ class Application(wx.Frame):
         self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
         self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
         self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
-        sPrompt = wx.StaticText(self.panel, label="Filter:")
+        sPrompt = wx.StaticText(self.panel, label="Search:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
         self.sString.SetMinSize(wx.Size(50, 20))
         self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
-        self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilter)
+        self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilterKey)
+        self.filter = wx.Button(self.panel, label="Search")
+        self.filter.Bind(wx.EVT_BUTTON, self.onFilter)
+        self.commands.Add(self.filter, 0, wx.ALL, 8)
+
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSaveTxt)
@@ -136,39 +141,42 @@ class Application(wx.Frame):
         k.textWidget.Show()
         k.disabledWidget.Show()
 
-    def onFilter(self, event):
+    def onFilterKey(self, event):
         """
         Hide keynotes that don't match a search string.
         """
         if event.GetKeyCode() in [wx.WXK_RETURN, wx.WXK_TAB, wx.WXK_CONTROL_F]:
-            ss = event.GetEventObject().GetValue()
-            if ss == '':  # Show everything
-                n = 0
-                for c in self.keynoteFile.categories:
-                    self.categoryNotebook.EnableTab(n, True)
-                    n += 1
-                    for k in (c.keynotes):
-                        self.unHideKeynote(k)
-                    c.pageWidget.Layout()
-                return
-            n = 0
-            for c in self.keynoteFile.categories:
-                found = False
-                for k in c.keynotes:
-                    ktext = k.textWidget.GetValue()
-                    if ktext.upper().count(ss.upper()) > 0:
-                        found = True
-                        self.unHideKeynote(k)
-                    else:
-                        self.hideKeynote(k)
-                if not found:
-                    # Hide the tab
-                    self.categoryNotebook.EnableTab(n, False)
-                n += 1
-                self.categoryNotebook.DoSizing()
-                c.pageWidget.Layout()
+            self.onFilter()
         else:
             event.Skip()
+
+    def onFilter(self, event=None):
+        ss = self.sString.GetValue()
+        if ss == '':  # Show everything
+            n = 0
+            for c in self.keynoteFile.categories:
+                self.categoryNotebook.EnableTab(n, True)
+                n += 1
+                for k in (c.keynotes):
+                    self.unHideKeynote(k)
+                c.pageWidget.Layout()
+            return
+        n = 0
+        for c in self.keynoteFile.categories:
+            found = False
+            for k in c.keynotes:
+                ktext = k.textWidget.GetValue()
+                if ktext.upper().count(ss.upper()) > 0:
+                    found = True
+                    self.unHideKeynote(k)
+                else:
+                    self.hideKeynote(k)
+            if not found:
+                # Hide the tab
+                self.categoryNotebook.EnableTab(n, False)
+            n += 1
+            self.categoryNotebook.DoSizing()
+            c.pageWidget.Layout()
 
     def onHideInactive(self, event):
         """
@@ -372,7 +380,6 @@ class Application(wx.Frame):
         # Make the keynote and append it to the appropriate list
         k = knm.Keynote(kType=kType, category=category)
         category.addKeynote(k)
-        # print(k)
         # Build the keynote widgets and add to the sizer
         sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
