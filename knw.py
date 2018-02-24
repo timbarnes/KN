@@ -1,11 +1,14 @@
+import sys
 import logging
 import wx
 import wx.lib.agw.aui as aui
 import wx.lib.scrolledpanel as scrolled
 import knm
 
-logging.basicConfig(level=logging.DEBUG)
-# wxPython version refactored
+logger = logging.getLogger('__name__')
+stream_handler = logging.StreamHandler()
+logger.setLevel(logging.DEBUG)
+logger.addHandler(stream_handler)
 
 
 class categoryPage(scrolled.ScrolledPanel):
@@ -119,14 +122,14 @@ class Application(wx.Frame):
         """
         Display in Status area.
         """
-        logging.info(message)
+        logger.info(message)
         self.sb.SetStatusText(message, field)
 
     def error(self, message):
         """
         Print an error.
         """
-        logging.error(message)
+        logger.error(message)
         self.sb.SetStatusText(message, field)
 
     @staticmethod
@@ -231,10 +234,10 @@ class Application(wx.Frame):
                 return
             # Make a keynoteFile object and populate
             if self.keynoteFile:
-                logging.debug('Deleting information from the old file')
+                logger.debug('Deleting information from the old file')
                 self.cleanUp()
             else:
-                logging.debug('Creating a new keynoteFile')
+                logger.debug('Creating a new keynoteFile')
                 self.keynoteFile = knm.keynoteFile()
             try:
                 self.keynoteFile.load(fileDialog.GetPath(), fileType)
@@ -396,7 +399,7 @@ class Application(wx.Frame):
         kn.SetMinSize(wx.Size(50, 16))
         kn.SetForegroundColour(color)
         kt = wx.TextCtrl(page,
-                         style=wx.TE_MULTILINE,
+                         style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER,
                          value=k.text)
         yDepth = 20 * max(len(k.text) / 75, 2)
         kt.SetMinSize(wx.Size(200, yDepth))
@@ -452,7 +455,7 @@ class Application(wx.Frame):
 
         notebook = self.categoryNotebook
         for c in self.keynoteFile.categories:  # Original data from the file
-            logging.debug(f"Building category page for {c.name}")  # A category
+            logger.debug(f"Building category page for {c.name}")  # A category
             # Create a new page (frame), add it to the notebook
             page = categoryPage(notebook, c)  # Make the page
             notebook.AddPage(page, c.name)
@@ -481,6 +484,17 @@ def main():
     """
     Top level function processes arguments and runs the app.
     """
+    global logger
+    if len(sys.argv) == 2:
+        flag = sys.argv[1]
+        if flag == '-i':
+            logger.debug('Setting logging level to INFO')
+            logger.setLevel(logging.INFO)
+        elif flag == '-w':
+            logger.debug('Setting logging level to WARN')
+            logger.setLevel(logging.WARN)
+        else:
+            print(f'Flag was <{flag}>')
     app = wx.App()
     Application().Show()
     app.MainLoop()

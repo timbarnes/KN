@@ -14,6 +14,9 @@ File I/O
 Spreadsheet file is the master file and is used for loading.
 .txt file can be saved, as can the spreadsheet.
 """
+logger = logging.getLogger('__name__')
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
 
 
 class Category(object):
@@ -220,9 +223,9 @@ class keynoteFile(object):
             if self.checkLock(fileName):
                 self.loadXlsx(self.lockedName(fileName))
             else:
-                print('File not found', fileName)
+                logger(f'File not found: {fileName}')
         else:
-            print('Bad fileType', fileType)
+            logger('Bad fileType: {fileType}')
 
     # def loadTxt(self, keynoteFile):
     #     """
