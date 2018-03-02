@@ -3,3 +3,6 @@
 *~
 *.xlsx.*
 *.pyc
+build
+_build
+Doc
