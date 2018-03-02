@@ -5,10 +5,7 @@ import wx.lib.agw.aui as aui
 import wx.lib.scrolledpanel as scrolled
 import knm
 
-logger = logging.getLogger('__name__')
-stream_handler = logging.StreamHandler()
-logger.setLevel(logging.DEBUG)
-logger.addHandler(stream_handler)
+logger = knm.logger
 
 
 class categoryPage(scrolled.ScrolledPanel):
@@ -125,7 +122,7 @@ class Application(wx.Frame):
         logger.info(message)
         self.sb.SetStatusText(message, field)
 
-    def error(self, message):
+    def error(self, message, field=0):
         """
         Print an error.
         """
@@ -290,7 +287,7 @@ class Application(wx.Frame):
             return
         if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
-                             "Continue?",
+                             "Do you really want to exit?",
                              wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
@@ -365,6 +362,14 @@ class Application(wx.Frame):
             self.msg(f"Updating text: {w.keynote.fullstring}")
             self.fileEdited = True
             self.currentCategory.pageWidget.Layout()
+        event.Skip()
+
+    def onMouseMove(self, event):
+        """
+        Mouse scrolling support.
+        """
+        logging.debug("Scroll event received")
+        self.categoryNotebook.GetCurrentPage().SetFocus()
 
     def addKeynote(self, kType):
         """
@@ -473,8 +478,8 @@ class Application(wx.Frame):
             pageSizer.Add(c.demoSizer, 0, wx.EXPAND, 0)
             pageSizer.Add(c.existingSizer, 0, wx.EXPAND, 0)
             pageSizer.Add(c.newSizer, 0, wx.EXPAND, 0)
-
             page.SetSizer(pageSizer)
+            page.Bind(wx.EVT_MOTION, self.onMouseMove)
             page.Layout()
         # Save the current category (the first one created)
         self.currentCategory = self.keynoteFile.categories[0]

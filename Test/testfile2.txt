@@ -3,13 +3,119 @@
 2	Floor
 3	Walls
 4	Roof
+0	General
+1	Site
+2	Floor
+3	Walls
+4	Roof
 
 D0001	DEMO 1	disabled
 D0002	Demo 2	0
+D0001	DEMO 1	disabled
+D0002	DEMO 2	0
 E0001	Existing 1	0
 E0002	Existing 2	disabled
 E0003	<Empty>	0
+E0001	Existing 1	0
+E0002	Existing 2	0
+E0003	<Empty>	disabled
 N0001	New 1	disabled
+N0002	<Empty>	disabled
+N0001	New 1	0
+N0002	<Empty>	0
+
+D0101	DEMO SITE 1	1
+D0102	Demo Site 2	1
+D0103	Demo Site	disabled
+D0104	Demo Site 1	1
+D0105	Demo Site 2	1
+D0106	Demo Site	disabled
+D0107	Demo Site 1	1
+D0108	Demo Site 2	1
+D0109	Demo Site	disabled
+D0101	DEMO SITE 1	1
+D0102	Demo Site 2	1
+D0103	Demo Site	disabled
+D0104	Demo Site 1	1
+D0105	Demo Site 2	1
+D0106	Demo Site	disabled
+D0107	Demo Site 1	1
+D0108	Demo Site 2	1
+D0109	Demo Site	disabled
+E0101	Existing Site 1	1
+E0102	Existing Site 1	1
+E0103	Existing Site 1	1
+E0101	Existing Site 1	1
+E0102	Existing Site 1	1
+E0103	Existing Site 1	1
+N0101	New Site 1	1
+N0102	New Site 2nd	1
+N0103	New Site 1	1
+N0104	New Site 2nd	1
+N0105	New Site 1	1
+N0106	New Site 2nd	1
+N0101	New Site 1	1
+N0102	New Site 2nd	1
+N0103	New Site 1	1
+N0104	New Site 2nd	1
+N0105	New Site 1	1
+N0106	New Site 2nd	1
+
+D0201	DEMO FLOOR 1	2
+D0202	<EMPTY>	2
+D0201	DEMO FLOOR 1	2
+D0202	<EMPTY>	2
+E0201	Existing Floor 1	2
+E0202	(E) TO REMAIN.	2
+E0203	<Empty>	2
+E0204	EXISTING FLOOR AND FINISH TO REMAIN U.O.N.	2
+E0201	Existing Floor 1	2
+E0202	(E) TO REMAIN.	2
+E0203	<Empty>	2
+E0204	EXISTING FLOOR AND FINISH TO REMAIN U.O.N.	2
+N0201	New Floor 1	2
+N0202	<EMPTY>	disabled
+N0203	<Empty>	2
+N0201	New Floor 1	2
+N0202	<EMPTY>	disabled
+N0203	<Empty>	2
+
+D0301	DEMO 1	3
+D0302	Demo 2	3
+D0303	<Empty>	3
+D0301	DEMO 1	3
+D0302	Demo 2	3
+D0303	<Empty>	3
+E0301	Existing 1	disabled
+E0302	Existing 2	3
+E0301	Existing 1	disabled
+E0302	Existing 2	3
+N0301	construct new wall where noted	3
+N0302	<Empty>	3
+N0301	construct new wall where noted	3
+N0302	<Empty>	3
+
+D0401	DEMO 1	4
+D0402	Demo 2	disabled
+D0403	<Empty>	4
+D0401	DEMO 1	4
+D0402	Demo 2	disabled
+D0403	<Empty>	4
+E0401	Existing 1	4
+E0402	Existing 2	4
+E0401	Existing 1	4
+E0402	Existing 2	4
+N0401	New 1	disabled
+N0402	<Empty>	disabled
+N0401	New 1	disabled
+N0402	<Empty>	disabled
+
+D0001	DEMO 1	disabled
+D0002	DEMO 2	0
+E0001	Existing 1	0
+E0002	Existing 2	0
+E0003	<Empty>	disabled
+N0001	New 1	0
 N0002	<Empty>	0
 
 D0101	DEMO SITE 1	1
