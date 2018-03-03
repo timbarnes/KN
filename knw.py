@@ -39,7 +39,6 @@ class Application(wx.Frame):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
                           'Edit Keynotes', size=(800, 500))
-        # We'll access notebook information from here
         self.categoryNotebook = None
         self.keynoteFile = None
         self.inactiveHidden = False
@@ -48,7 +47,7 @@ class Application(wx.Frame):
 
     def buildGUI(self):
         """
-        Build the GUI.
+        Build the GUI. It's divided into command and keynote sections.
         """
         # Create the main panel that goes in the frame
         self.panel = wx.Panel(self, wx.ID_ANY)
@@ -56,7 +55,7 @@ class Application(wx.Frame):
         # Status bar for messages
         self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Simple keynote editor", 0)
-        # Create the sizers
+        # Create the sizers: overall and command section.
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
@@ -66,7 +65,7 @@ class Application(wx.Frame):
         self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
         self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
         self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
-        # Create the search box and save button(s)
+        # Create the search / filter box
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
@@ -88,10 +87,10 @@ class Application(wx.Frame):
         # self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
         # self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
         # self.commands.Add(self.closeXlsx, 0, wx.ALL, 8)
-        # Create the Add keynote sizer
+        # Create the Add keynote sizer - a second row of commands
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
-        # Create the Add keynote buttons
+        # Create the show/hide inactive and add keynote buttons
         self.hideButton = wx.Button(self.panel, label="  Hide inactive  ")
         self.addSizer.Add(self.hideButton, 0, wx.ALL, 8)
         self.hideButton.Bind(wx.EVT_BUTTON, self.onHideInactive)
@@ -107,7 +106,7 @@ class Application(wx.Frame):
         self.addNew = wx.Button(self.panel, label="Add New")
         self.addSizer.Add(self.addNew, 0, wx.ALL, 8)
         self.addNew.Bind(wx.EVT_BUTTON, self.onAddNew)
-
+        # Attach the sizer and fit the elements.
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
 
@@ -139,7 +138,7 @@ class Application(wx.Frame):
 
     def refreshKeynoteWidgets(self):
         """
-        Hide and show widgets based on filter, disabled, and hide flag.
+        Hide and unhide widgets based on filter, disabled, and hide flag.
         """
         n = 0
         for c in self.keynoteFile.categories:
@@ -150,12 +149,12 @@ class Application(wx.Frame):
                 else:
                     self.unHideKeynote(k)
                     found = True
+            # Disable tabs where no widgets are visible
             if found:
                 self.categoryNotebook.EnableTab(n, True)
             else:
                 self.categoryNotebook.EnableTab(n, False)
             n += 1
-            self.categoryNotebook.DoSizing()
             c.pageWidget.Layout()
 
     def onFilterKey(self, event):
@@ -241,8 +240,8 @@ class Application(wx.Frame):
                          f'{len(self.keynoteFile.categories)}')
             try:
                 self.keynoteFile.load(fileDialog.GetPath(), fileType)
-                logger.debug('New keynoteFile loaded: # categories = '
-                             f'{len(self.keynoteFile.categories)}')
+                logger.info('New keynoteFile loaded: # categories = '
+                            f'{len(self.keynoteFile.categories)}')
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
@@ -294,7 +293,7 @@ class Application(wx.Frame):
         if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
                              "Do you really want to close the file?",
-                             wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
+                             wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
         self.cleanUp()
