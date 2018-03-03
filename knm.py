@@ -127,7 +127,7 @@ class Keynote(object):
             logger.error('Keynote improper arguments')
             return
         self.filter = False  # Keynotes are not initially filtered out
-        logger.debug(f'Created keynote: {self.fullstring}')
+        # logger.debug(f'Created keynote: {self.fullstring}')
 
     @property
     def identifier(self):
@@ -163,10 +163,13 @@ class keynoteFile(object):
     """
     A record containing all the data for a keynote file.
     """
-    fileName = None   # Store the original filename
-    user = getuser()  # We use the username for the lock
-    modified = False  # Marker tells us if the file content has been changed
-    categories = []  # A list of categories, with keynotes attached
+
+    def __init__(self):
+        self.fileName = None   # Store the original filename
+        self.user = getuser()  # We use the username for the lock
+        self.modified = False  # Tells us if the file content has been changed
+        self.categories = []   # A list of categories, with keynotes attached
+        logger.debug('Created new empty keynoteFile record')
 
     def clear(self):
         """
