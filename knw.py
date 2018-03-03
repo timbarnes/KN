@@ -142,6 +142,27 @@ class Application(wx.Frame):
         k.textWidget.Show()
         k.disabledWidget.Show()
 
+    def refreshKeynoteWidgets(self):
+        """
+        Hide and show widgets based on filter, disabled, and hide flag.
+        """
+        n = 0
+        for c in self.keynoteFile.categories:
+            found = False
+            for k in c.keynotes:
+                if k.filter or (self.inactiveHidden and k.disabled):
+                    self.hideKeynote(k)
+                else:
+                    self.unHideKeynote(k)
+                    found = True
+            if found:
+                self.categoryNotebook.EnableTab(n, True)
+            else:
+                self.categoryNotebook.EnableTab(n, False)
+            n += 1
+            self.categoryNotebook.DoSizing()
+            c.pageWidget.Layout()
+
     def onFilterKey(self, event):
         """
         Hide keynotes that don't match a search string.
@@ -153,52 +174,33 @@ class Application(wx.Frame):
 
     def onFilter(self, event=None):
         ss = self.sString.GetValue()
-        if ss == '':  # Show everything, but honor hide inactive
-            n = 0
+        if ss == '':  # Remove the filter
             for c in self.keynoteFile.categories:
-                self.categoryNotebook.EnableTab(n, True)
-                n += 1
                 for k in (c.keynotes):
-                    self.unHideKeynote(k)
-                c.pageWidget.Layout()
-            return
-        n = 0
-        for c in self.keynoteFile.categories:
-            found = False
-            for k in c.keynotes:
-                ktext = k.textWidget.GetValue()
-                if ktext.upper().count(ss.upper()) > 0:
-                    found = True
-                    self.unHideKeynote(k)
-                else:
-                    self.hideKeynote(k)
-            if not found:
-                # Hide the tab
-                self.categoryNotebook.EnableTab(n, False)
-            n += 1
-            self.categoryNotebook.DoSizing()
-            c.pageWidget.Layout()
+                    k.filter = False
+        else:
+            for c in self.keynoteFile.categories:
+                for k in (c.keynotes):
+                    ktext = k.textWidget.GetValue()
+                    if ktext.upper().count(ss.upper()) > 0:
+                        k.filter = False
+                    else:
+                        k.filter = True
+        self.refreshKeynoteWidgets()
+        if event:
+            event.Skip()
 
     def onHideInactive(self, event):
         """
         Hide or show inactive keynotes
         """
         if self.inactiveHidden:
-            for c in self.keynoteFile.categories:
-                for k in c.keynotes:
-                    if k.disabled:
-                        self.unHideKeynote(k)
-                c.pageWidget.Layout()
             event.GetEventObject().SetLabelText('Hide Inactive')
             self.inactiveHidden = False
         else:
-            for c in self.keynoteFile.categories:
-                for k in c.keynotes:
-                    if k.disabled:
-                        self.hideKeynote(k)
-                c.pageWidget.Layout()
             event.GetEventObject().SetLabelText('Show Inactive')
             self.inactiveHidden = True
+        self.refreshKeynoteWidgets()
 
     def onOpenTxt(self, event):
         """

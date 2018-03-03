@@ -29,7 +29,7 @@ class Category(object):
         """
         Create category object
         """
-        logging.debug("Creating category {}".format(name))
+        logger.debug("Creating category {}".format(name))
         self.name = name
         self.number = int(number)
         # Placeholders for keynotes to be added later
@@ -48,7 +48,7 @@ class Category(object):
         else:
             self.newKeynotes.append(keynote)
         if not keynote.number:
-            logging.error('Keynote number not provided.')
+            logger.error('Keynote number not provided.')
         keynote.catnum = self.number
         keynote.category = self
 
@@ -117,16 +117,17 @@ class Keynote(object):
             elif den == 'N':
                 self.number = _next_num(category.newKeynotes)
             else:
-                logging.error(f'Bad keynote type: {den}')
+                logger.error(f'Bad keynote type: {den}')
 
         if numString and kText and catString:
             _from_file_data(self, numString, kText, catString)
         elif kType and category:
             _insert_new(self, category, kType)
         else:
-            logging.error('Keynote improper arguments')
+            logger.error('Keynote improper arguments')
             return
-        logging.debug(f'Created keynote: {self.fullstring}')
+        self.filter = False  # Keynotes are not initially filtered out
+        logger.debug(f'Created keynote: {self.fullstring}')
 
     @property
     def identifier(self):
@@ -184,7 +185,7 @@ class keynoteFile(object):
         Make a backup then lock the file (via copy)
         """
         result = os.path.isfile(name)
-        logging.debug(f'Locking file: {name}')
+        logger.debug(f'Locking file: {name}')
         if result:
             shutil.copy(name, name + '.' + str(int(time.time())))
             os.rename(name, self.lockedName(name))
@@ -192,12 +193,12 @@ class keynoteFile(object):
         return result  # Will be False if there's no file
 
     def unlockFile(self, name):
-        logging.debug(f'Unlocking file {name}')
+        logger.debug(f'Unlocking file {name}')
         result = os.path.isfile(self.lockedName(name))
         if result:
             os.rename(self.lockedName(name), name)
         else:
-            logging.error(f'File not found: {name}')
+            logger.error(f'File not found: {name}')
         self.clear()
         return result  # Can't unlock non-existent file
 
@@ -269,7 +270,7 @@ class keynoteFile(object):
         """
         # Make sure the filename ends in .xlsx, changing it if necessary
         txtFileName = self.fileName.rsplit('.', 1)[0] + '.txt'
-        logging.info(f'Saving file: {txtFileName}')
+        logger.info(f'Saving file: {txtFileName}')
         with open(txtFileName, 'w+') as f:
             cCount = 0
             kCount = 0
@@ -291,10 +292,10 @@ class keynoteFile(object):
         Load in an Excel keynote fileand return categories and keynotes.
         """
         try:
-            logging.debug(f"Opening file: {fileName}")
+            logger.debug(f"Opening file: {fileName}")
             self.workbook = load_workbook(filename=fileName)
         except Exception as e:
-            logging.error(f'Excel open failed: {e}')
+            logger.error(f'Excel open failed: {e}')
             return False
         # Assume first tab holds the Data
         rows = tuple(self.workbook.active.rows)
@@ -304,7 +305,7 @@ class keynoteFile(object):
                 continue  # Ignore any row with a blank in columns A or B
             if type(row[0].value) == int:
                 # It's a category
-                logging.debug(f'Found category {row[1].value}')
+                logger.debug(f'Found category {row[1].value}')
                 self.categories.append(Category(row[0].value, row[1].value))
             elif row[0].value and len(row[0].value) == 5:
                 # There's a keynote identifier
@@ -312,11 +313,11 @@ class keynoteFile(object):
                                            kText=row[1].value,
                                            catString=str(row[2].value)))
             else:
-                logging.error("Can't process /{}/{}/{}/".format(row[0].value,
-                                                                row[1].value,
-                                                                row[2].value))
-        logging.info(f"{len(self.categories)} categories found.")
-        logging.info(f"{len(keynoteList)} keynotes found")
+                logger.error("Can't process /{}/{}/{}/".format(row[0].value,
+                                                               row[1].value,
+                                                               row[2].value))
+        logger.info(f"{len(self.categories)} categories found.")
+        logger.info(f"{len(keynoteList)} keynotes found")
         for c in self.categories:
             # Attach keynotes to categories correctly
             for k in keynoteList:
@@ -337,7 +338,7 @@ class keynoteFile(object):
             row is a number, col is a letter
             """
             addr = f'{col}{row}'
-            logging.debug(f'Writing {val} into cell {addr}')
+            logger.debug(f'Writing {val} into cell {addr}')
             worksheet[addr] = val
             if font:
                 worksheet[addr].font = font
@@ -348,7 +349,7 @@ class keynoteFile(object):
 
         # Make sure the filename ends in .xlsx, changing it if necessary
         fileName = self.lockedName(self.fileName)
-        logging.debug(f'Saving to {fileName}')
+        logger.debug(f'Saving to {fileName}')
         # Create a new workbook and worksheet
         wb = Workbook()
         ws = wb.active
@@ -413,7 +414,7 @@ class keynoteFile(object):
                                start_column=1, end_column=3)
                 # Create outline for current category
                 rowCount += 1
-        logging.debug(f'Saving file: {fileName}')
+        logger.debug(f'Saving file: {fileName}')
         wb.save(fileName)
         return (cCount, kCount)
 
