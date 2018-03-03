@@ -1,6 +1,5 @@
 import sys
 import logging
-import time
 import wx
 import wx.lib.agw.aui as aui
 import wx.lib.scrolledpanel as scrolled
@@ -51,7 +50,7 @@ class Application(wx.Frame):
         """
         Build the GUI.
         """
-        # Add a button so it looks correct on all platforms
+        # Create the main panel that goes in the frame
         self.panel = wx.Panel(self, wx.ID_ANY)
         self.panel.SetAutoLayout(True)
         # Status bar for messages
@@ -61,13 +60,13 @@ class Application(wx.Frame):
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
-        # Create the search box and save button(s)
         # self.loadText = wx.Button(self.panel, label="Load .txt:")
         # self.loadText.Bind(wx.EVT_BUTTON, self.onOpenTxt)
         # self.commands.Add(self.loadText, 0, wx.ALL, 8)
         self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
         self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
         self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
+        # Create the search box and save button(s)
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
@@ -77,7 +76,7 @@ class Application(wx.Frame):
         self.filter = wx.Button(self.panel, label="Search")
         self.filter.Bind(wx.EVT_BUTTON, self.onFilter)
         self.commands.Add(self.filter, 0, wx.ALL, 8)
-
+        # Create save buttons
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSaveTxt)
@@ -85,6 +84,7 @@ class Application(wx.Frame):
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
         self.saveXlsx.Bind(wx.EVT_BUTTON, self.onSaveXlsx)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
+        # Create close button
         # self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
         # self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
         # self.commands.Add(self.closeXlsx, 0, wx.ALL, 8)
@@ -107,11 +107,6 @@ class Application(wx.Frame):
         self.addNew = wx.Button(self.panel, label="Add New")
         self.addSizer.Add(self.addNew, 0, wx.ALL, 8)
         self.addNew.Bind(wx.EVT_BUTTON, self.onAddNew)
-        # Create the notebook for Categories
-        self.categoryNotebook = aui.AuiNotebook(self.panel)
-        self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
-        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
-                                   self.onPageChanged)
 
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
@@ -213,7 +208,7 @@ class Application(wx.Frame):
         Open an Excel file
         """
         self.openFile('Excel')
-        self.loadXlsx.Enable(False)  # Grey out the button
+        # self.loadXlsx.Enable(False)  # Grey out the button
 
     def openFile(self, fileType):
         """
@@ -232,16 +227,22 @@ class Application(wx.Frame):
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) \
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
+                self.msg('Load canceled by user')
                 return
-            # Make a keynoteFile object and populate
-            if self.keynoteFile:
+            logger.debug(f'self.keynoteFile = {self.keynoteFile}')
+            if self.keynoteFile is not None:
                 logger.debug('Flushing the old file')
                 self.onClose()
             else:
                 logger.debug('Creating a new keynoteFile')
+            # Make a keynoteFile object and populate
             self.keynoteFile = knm.keynoteFile()
+            logger.debug(f'New keynoteFile created: # categories = '
+                         f'{len(self.keynoteFile.categories)}')
             try:
                 self.keynoteFile.load(fileDialog.GetPath(), fileType)
+                logger.debug('New keynoteFile loaded: # categories = '
+                             f'{len(self.keynoteFile.categories)}')
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
@@ -292,7 +293,7 @@ class Application(wx.Frame):
             return
         if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
-                             "Do you really want to exit?",
+                             "Do you really want to close the file?",
                              wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
@@ -402,7 +403,6 @@ class Application(wx.Frame):
 
     def buildKeynote(self, page, k, color):
         """Create a row for a keynote"""
-        # print("Building keynote {}".format(k))
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
         id = k.identifier
         kn = wx.StaticText(page, label=id)
@@ -433,20 +433,22 @@ class Application(wx.Frame):
         """
         Destroy the current widget set
         """
-        if self.keynoteFile:
-            if self.keynoteFile.categories:
-                for c in self.keynoteFile.categories:
-                    for k in c.keynotes:
-                        k.numberWidget.Destroy()
-                        k.textWidget.Destroy()
-                        k.disabledWidget.Destroy()
-                    # c.pageWidget.Destroy()
-        notebook = self.categoryNotebook
-        # If there was a file previously loaded, delete its pages and widgets
-        if notebook:
-            while notebook.GetPageCount():
-                print(notebook.GetPageCount())
-                notebook.DeletePage(0)
+        self.categoryNotebook.Destroy()
+        self.categoryNotebook = None
+        logger.debug('Notebook destroyed')
+        # if self.keynoteFile:
+        #     if self.keynoteFile.categories:
+        #         for c in self.keynoteFile.categories:
+        #             for k in c.keynotes:
+        #                 k.numberWidget.Destroy()
+        #                 k.textWidget.Destroy()
+        #                 k.disabledWidget.Destroy()
+        #             # c.pageWidget.Destroy()
+        # notebook = self.categoryNotebook
+        # # If there was a file previously loaded, delete its pages and widgets
+        # if notebook:
+        #     while notebook.GetPageCount():
+        #         print(notebook.GetPageCount())
         self.panel.Layout()
 
     def buildEditor(self):
@@ -464,6 +466,11 @@ class Application(wx.Frame):
                 sizer.Add(kSizer, 0, wx.EXPAND, 2)
             return sizer
 
+        # Create the notebook for Categories
+        self.categoryNotebook = aui.AuiNotebook(self.panel)
+        self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
+        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
+                                   self.onPageChanged)
         notebook = self.categoryNotebook
         for c in self.keynoteFile.categories:  # Original data from the file
             logger.debug(f"Building category page for {c.name}")  # A category
@@ -486,9 +493,9 @@ class Application(wx.Frame):
             pageSizer.Add(c.newSizer, 0, wx.EXPAND, 0)
             page.SetSizer(pageSizer)
             page.Bind(wx.EVT_MOTION, self.onMouseMove)
-            page.Layout()
         # Save the current category (the first one created)
         self.currentCategory = self.keynoteFile.categories[0]
+        self.mainBox.Layout()
 
 
 def main():
@@ -496,6 +503,7 @@ def main():
     Top level function processes arguments and runs the app.
     """
     global logger
+    logger.setLevel(logging.DEBUG)
     if len(sys.argv) == 2:
         flag = sys.argv[1]
         if flag == '-i':
@@ -505,7 +513,7 @@ def main():
             logger.debug('Setting logging level to WARN')
             logger.setLevel(logging.WARN)
         else:
-            print(f'Flag was <{flag}>')
+            logger.debug(f'Flag was <{flag}>')
     app = wx.App()
     Application().Show()
     app.MainLoop()
