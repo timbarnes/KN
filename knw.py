@@ -434,9 +434,10 @@ class Application(wx.Frame):
         """
         Destroy the current widget set
         """
-        self.categoryNotebook.Destroy()
-        self.categoryNotebook = None
-        logger.debug('Notebook destroyed')
+        if self.categoryNotebook:
+            self.categoryNotebook.Destroy()
+            self.categoryNotebook = None
+            logger.debug('Notebook destroyed')
         self.panel.Layout()
 
     def buildEditor(self):

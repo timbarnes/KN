@@ -10,8 +10,10 @@ sys.path.insert(0, '..')
 import knm
 import knw
 
+
 def setup():
     shutil.copyfile('testfile2_original.xlsx', 'testfile2.xlsx')
+    shutil.copyfile('singlecat_original.xlsx', 'singlecat.xlsx')
 
 
 def test_application():
@@ -47,12 +49,33 @@ def test_application():
     app.onSaveTxt(0)  # Should be passed an EventObject
     app.onSaveXlsx(0)
     assert filecmp.cmp('testfile2.txt', 'testfile2_original.txt')
-    # app.onAddDemo(0)
-    # assert len(app.keynoteFile.categories[0].demoKeynotes) == 6
+    app.onClose()
+    assert app.keynoteFile is None
+    assert os.path.isfile('testfile2.xlsx')
+    # Load a new one
+    app.keynoteFile = knm.keynoteFile()
+    assert os.path.isfile('singlecat.xlsx')
+    app.keynoteFile.load('singlecat.xlsx', 'Excel')
+    kf = app.keynoteFile
+    assert kf is not None
+    assert kf.fileName == 'singlecat.xlsx'
+    assert os.path.isfile(kf.lockedName(kf.fileName))
+    assert len(kf.categories) == 1
+    assert kf.categories[0].name == 'General'
+    print(len(kf.categories[0].keynotes))
+    assert len(kf.categories[0].keynotes) == 8
+    assert kf.categories[0].existingKeynotes[0].disabled is True
+    app.onSaveTxt(0)  # Should be passed an EventObject
+    app.onSaveXlsx(0)
+    assert filecmp.cmp('singlecat.txt', 'singlecat_original.txt')
 
 
 def teardown():
     if os.path.isfile('testfile2_tim.xlsx'):
         os.remove('testfile2_tim.xlsx')
     for f in glob.glob('testfile2.xlsx.*'):
+        os.remove(f)
+    if os.path.isfile('singlecat_tim.xlsx'):
+        os.remove('singlecat_tim.xlsx')
+    for f in glob.glob('singlecat.xlsx.*'):
         os.remove(f)

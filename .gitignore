@@ -4,7 +4,9 @@
 *.xlsx.*
 *.pyc
 .DS_Store
-build
-_build
-Doc
-Old
+build/
+dist/
+_build/
+__pycache__/
+Doc/
+Old/
