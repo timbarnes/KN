@@ -3,3 +3,8 @@
 *~
 *.xlsx.*
 *.pyc
+.DS_Store
+build
+_build
+Doc
+Old

@@ -10,10 +10,6 @@ sys.path.insert(0, '..')
 import knm
 import knw
 
-
-kf = None  # Handle for keynoteFile
-
-
 def setup():
     shutil.copyfile('testfile2_original.xlsx', 'testfile2.xlsx')
 
