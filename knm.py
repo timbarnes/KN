@@ -278,9 +278,10 @@ class keynoteFile(object):
             cCount = 0
             kCount = 0
             for c in self.categories:
-                f.write("{}\t{}".format(c.number, c.name))
+                f.write(f"{c.number}\t{c.name}")
                 f.write('\n')
                 cCount += 1
+            f.write("99\tdisabled\n")
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.keynotes:
@@ -308,6 +309,10 @@ class keynoteFile(object):
                 continue  # Ignore any row with a blank in columns A or B
             if type(row[0].value) == int:
                 # It's a category
+                if row[1].value == 'disabled':
+                    # Ignore the disabled pseudo category
+                    logger.debug("Ignoring disabled pseudo-category")
+                    pass
                 logger.debug(f'Found category {row[1].value}')
                 self.categories.append(Category(row[0].value, row[1].value))
             elif row[0].value and len(row[0].value) == 5:
@@ -376,8 +381,7 @@ class keynoteFile(object):
             cCount += 1
             rowCount += 1
         writeCell(ws, rowCount, 'A',
-                  ("Mechanically generated keynote file. "
-                   "REMEMBER TO SAVE after editing, then SAVE FILE AS "
+                  ("REMEMBER TO SAVE after editing, then SAVE FILE AS "
                    "Text (Tab delimited)(*.txt), then load/reload your "
                    "keynotes on your project Revit file so Revit can see "
                    "the changes. All keynote / text editing shall be "

@@ -3,6 +3,7 @@
 2	Floor
 3	Walls
 4	Roof
+99	disabled
 
 D0001	DEMO 1	disabled
 D0002	Demo 2	0
