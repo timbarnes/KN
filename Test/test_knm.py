@@ -13,7 +13,8 @@ kf = None  # Handle for keynoteFile
 
 
 def setup():
-    shutil.copyfile('testfile2_original.xlsx', 'testfile2.xlsx')
+    shutil.copyfile('testfile2 keynotes_original.xlsx',
+                    'testfile2 keynotes.xlsx')
 
 
 def test_category():
@@ -73,10 +74,10 @@ def test_keynote():
 
 def test_load():
     kf = knm.keynoteFile()
-    kf.load('testfile2.xlsx', 'Excel')
-    assert os.path.isfile('testfile2_tim.xlsx')
+    kf.load('testfile2 keynotes.xlsx', 'Excel')
+    assert os.path.isfile('testfile2 keynotes_tim.xlsx')
     assert kf is not None
-    assert kf.fileName == 'testfile2.xlsx'
+    assert kf.fileName == 'testfile2 keynotes.xlsx'
     assert os.path.isfile(kf.lockedName(kf.fileName))
     assert len(kf.categories) == 5
     for i in range(5):
@@ -92,16 +93,17 @@ def test_load():
     assert kf.saveTxt() == (5, 48)
     assert kf.saveXlsx() == (5, 48)
     assert kf.unlockFile(kf.fileName)
-    assert filecmp.cmp('testfile2.txt', 'testfile2_original.txt')
+    assert filecmp.cmp('testfile2 keynotes.txt',
+                       'testfile2 keynotes_original.txt')
     assert kf.fileName is None
     assert kf.categories == []
     kf = knm.keynoteFile()
     assert len(kf.categories) == 0
     assert kf.fileName == None
-    kf.load('testfile2.xlsx', 'Excel')
-    assert os.path.isfile('testfile2_tim.xlsx')
+    kf.load('testfile2 keynotes.xlsx', 'Excel')
+    assert os.path.isfile('testfile2 keynotes_tim.xlsx')
     assert kf is not None
-    assert kf.fileName == 'testfile2.xlsx'
+    assert kf.fileName == 'testfile2 keynotes.xlsx'
     assert os.path.isfile(kf.lockedName(kf.fileName))
     assert len(kf.categories) == 5
     for i in range(5):
@@ -117,13 +119,14 @@ def test_load():
     assert kf.saveTxt() == (5, 48)
     assert kf.saveXlsx() == (5, 48)
     assert kf.unlockFile(kf.fileName)
-    assert filecmp.cmp('testfile2.txt', 'testfile2_original.txt')
+    assert filecmp.cmp('testfile2 keynotes.txt',
+                       'testfile2 keynotes_original.txt')
     assert kf.fileName is None
     assert kf.categories == []
 
 
 def teardown():
-    if os.path.isfile('testfile2_tim.xlsx'):
+    if os.path.isfile('testfile2 keynotes_tim.xlsx'):
         os.remove('testfile2_tim.xlsx')
-    for f in glob.glob('testfile2.xlsx.*'):
+    for f in glob.glob('testfile2 keynotes.xlsx.*'):
         os.remove(f)

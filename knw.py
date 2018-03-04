@@ -215,7 +215,7 @@ class Application(wx.Frame):
         Open a keynote file, calling the appropriate loader based on fileType.
         """
         if fileType == 'Excel':
-            wc = "xlsx files (*.xlsx|*.xlsx"  # Wildcard
+            wc = "xlsx files (*.xlsx)|*.xlsx"  # Wildcard
         elif fileType == 'Text':
             wc = "txt files (*.txt|*.txt"
         else:
@@ -230,6 +230,15 @@ class Application(wx.Frame):
                 self.msg('Load canceled by user')
                 return
             logger.debug(f'self.keynoteFile = {self.keynoteFile}')
+            new_file = fileDialog.GetPath()
+            if new_file.upper().count('NOTES.XLSX') == 0:
+                try:
+                    user = new_file.upper().split("_")[1].split(".XLSX")[0]
+                except IndexError:
+                    self.msg(f'{new_file} is not a keynote file')
+                else:
+                    self.msg(f'File is locked by user {user}')
+                return
             if self.keynoteFile is not None:
                 logger.debug('Flushing the old file')
                 self.onClose()
@@ -240,7 +249,7 @@ class Application(wx.Frame):
             logger.debug(f'New keynoteFile created: # categories = '
                          f'{len(self.keynoteFile.categories)}')
             try:
-                self.keynoteFile.load(fileDialog.GetPath(), fileType)
+                self.keynoteFile.load(new_file, fileType)
                 logger.info('New keynoteFile loaded: # categories = '
                             f'{len(self.keynoteFile.categories)}')
             except IOError:

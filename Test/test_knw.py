@@ -12,8 +12,10 @@ import knw
 
 
 def setup():
-    shutil.copyfile('testfile2_original.xlsx', 'testfile2.xlsx')
-    shutil.copyfile('singlecat_original.xlsx', 'singlecat.xlsx')
+    shutil.copyfile('testfile2 keynotes_original.xlsx',
+                    'testfile2 keynotes.xlsx')
+    shutil.copyfile('singlecat keynotes_original.xlsx',
+                    'singlecat keynotes.xlsx')
 
 
 def test_application():
@@ -27,13 +29,13 @@ def test_application():
     assert f'{type(app.panel)}' == "<class 'wx._core.Panel'>"
     assert f'{type(app.commands)}' == "<class 'wx._core.BoxSizer'>"
     app.keynoteFile = knm.keynoteFile()
-    assert os.path.isfile('testfile2.xlsx')
-    app.keynoteFile.load('testfile2.xlsx', 'Excel')
+    assert os.path.isfile('testfile2 keynotes.xlsx')
+    app.keynoteFile.load('testfile2 keynotes.xlsx', 'Excel')
     print(app.__dict__)
     # assert app.currentCategory == 'General'
     kf = app.keynoteFile
     assert kf is not None
-    assert kf.fileName == 'testfile2.xlsx'
+    assert kf.fileName == 'testfile2 keynotes.xlsx'
     assert os.path.isfile(kf.lockedName(kf.fileName))
     assert len(kf.categories) == 5
     for i in range(5):
@@ -48,17 +50,17 @@ def test_application():
     assert kf.categories[4].demoKeynotes[1].disabled is True
     app.onSaveTxt(0)  # Should be passed an EventObject
     app.onSaveXlsx(0)
-    assert filecmp.cmp('testfile2.txt', 'testfile2_original.txt')
+    assert filecmp.cmp('testfile2 keynotes.txt', 'testfile2 keynotes_original.txt')
     app.onClose()
     assert app.keynoteFile is None
-    assert os.path.isfile('testfile2.xlsx')
+    assert os.path.isfile('testfile2 keynotes.xlsx')
     # Load a new one
     app.keynoteFile = knm.keynoteFile()
-    assert os.path.isfile('singlecat.xlsx')
-    app.keynoteFile.load('singlecat.xlsx', 'Excel')
+    assert os.path.isfile('singlecat keynotes.xlsx')
+    app.keynoteFile.load('singlecat keynotes.xlsx', 'Excel')
     kf = app.keynoteFile
     assert kf is not None
-    assert kf.fileName == 'singlecat.xlsx'
+    assert kf.fileName == 'singlecat keynotes.xlsx'
     assert os.path.isfile(kf.lockedName(kf.fileName))
     assert len(kf.categories) == 1
     assert kf.categories[0].name == 'General'
@@ -67,17 +69,17 @@ def test_application():
     assert kf.categories[0].existingKeynotes[0].disabled is True
     app.onSaveTxt(0)  # Should be passed an EventObject
     app.onSaveXlsx(0)
-    assert filecmp.cmp('singlecat.txt', 'singlecat_original.txt')
+    assert filecmp.cmp('singlecat keynotes.txt', 'singlecat keynotes_original.txt')
     app.onClose()
-    assert os.path.isfile('singlecat.xlsx')
+    assert os.path.isfile('singlecat keynotes.xlsx')
 
 
 def teardown():
-    if os.path.isfile('testfile2_tim.xlsx'):
-        os.remove('testfile2_tim.xlsx')
-    for f in glob.glob('testfile2.xlsx.*'):
+    if os.path.isfile('testfile2 keynotes_tim.xlsx'):
+        os.remove('testfile2 keynotes_tim.xlsx')
+    for f in glob.glob('testfile2 keynotes.xlsx.*'):
         os.remove(f)
-    if os.path.isfile('singlecat_tim.xlsx'):
-        os.remove('singlecat_tim.xlsx')
-    for f in glob.glob('singlecat.xlsx.*'):
+    if os.path.isfile('singlecat keynotes_tim.xlsx'):
+        os.remove('singlecat keynotes_tim.xlsx')
+    for f in glob.glob('singlecat keynotes.xlsx.*'):
         os.remove(f)
