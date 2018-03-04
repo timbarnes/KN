@@ -5,10 +5,7 @@ import wx.lib.agw.aui as aui
 import wx.lib.scrolledpanel as scrolled
 import knm
 
-logger = logging.getLogger('__name__')
-stream_handler = logging.StreamHandler()
-logger.setLevel(logging.DEBUG)
-logger.addHandler(stream_handler)
+logger = knm.logger
 
 
 class categoryPage(scrolled.ScrolledPanel):
@@ -42,34 +39,34 @@ class Application(wx.Frame):
         # Create the main frame
         wx.Frame.__init__(self, None, wx.ID_ANY,
                           'Edit Keynotes', size=(800, 500))
-        # We'll access notebook information from here
         self.categoryNotebook = None
         self.keynoteFile = None
         self.inactiveHidden = False
         self.fileEdited = False
+        self.currentCategory = None
         self.buildGUI()
 
     def buildGUI(self):
         """
-        Build the GUI.
+        Build the GUI. It's divided into command and keynote sections.
         """
-        # Add a button so it looks correct on all platforms
+        # Create the main panel that goes in the frame
         self.panel = wx.Panel(self, wx.ID_ANY)
         self.panel.SetAutoLayout(True)
         # Status bar for messages
         self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Simple keynote editor", 0)
-        # Create the sizers
+        # Create the sizers: overall and command section.
         self.mainBox = wx.BoxSizer(wx.VERTICAL)
         self.commands = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.commands, 0, wx.EXPAND, 0)
-        # Create the search box and save button(s)
         # self.loadText = wx.Button(self.panel, label="Load .txt:")
         # self.loadText.Bind(wx.EVT_BUTTON, self.onOpenTxt)
         # self.commands.Add(self.loadText, 0, wx.ALL, 8)
         self.loadXlsx = wx.Button(self.panel, label="Load .xlsx:")
         self.loadXlsx.Bind(wx.EVT_BUTTON, self.onOpenXlsx)
         self.commands.Add(self.loadXlsx, 0, wx.ALL, 8)
+        # Create the search / filter box
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
         self.sString = wx.TextCtrl(self.panel)
@@ -79,7 +76,7 @@ class Application(wx.Frame):
         self.filter = wx.Button(self.panel, label="Search")
         self.filter.Bind(wx.EVT_BUTTON, self.onFilter)
         self.commands.Add(self.filter, 0, wx.ALL, 8)
-
+        # Create save buttons
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSaveTxt)
@@ -87,13 +84,14 @@ class Application(wx.Frame):
         self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
         self.saveXlsx.Bind(wx.EVT_BUTTON, self.onSaveXlsx)
         self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
-        self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
-        self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
-        self.commands.Add(self.closeXlsx, 0, wx.ALL, 8)
-        # Create the Add keynote sizer
+        # Create close button
+        # self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
+        # self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
+        # self.commands.Add(self.closeXlsx, 0, wx.ALL, 8)
+        # Create the Add keynote sizer - a second row of commands
         self.addSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainBox.Add(self.addSizer, 0, wx.EXPAND, 0)
-        # Create the Add keynote buttons
+        # Create the show/hide inactive and add keynote buttons
         self.hideButton = wx.Button(self.panel, label="  Hide inactive  ")
         self.addSizer.Add(self.hideButton, 0, wx.ALL, 8)
         self.hideButton.Bind(wx.EVT_BUTTON, self.onHideInactive)
@@ -109,12 +107,7 @@ class Application(wx.Frame):
         self.addNew = wx.Button(self.panel, label="Add New")
         self.addSizer.Add(self.addNew, 0, wx.ALL, 8)
         self.addNew.Bind(wx.EVT_BUTTON, self.onAddNew)
-
-        # Create the notebook for Categories
-        self.categoryNotebook = aui.AuiNotebook(self.panel)
-        self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
-        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
-                                   self.onPageChanged)
+        # Attach the sizer and fit the elements.
         self.panel.SetSizer(self.mainBox)
         self.panel.Fit()
 
@@ -125,7 +118,7 @@ class Application(wx.Frame):
         logger.info(message)
         self.sb.SetStatusText(message, field)
 
-    def error(self, message):
+    def error(self, message, field=0):
         """
         Print an error.
         """
@@ -144,6 +137,27 @@ class Application(wx.Frame):
         k.textWidget.Show()
         k.disabledWidget.Show()
 
+    def refreshKeynoteWidgets(self):
+        """
+        Hide and unhide widgets based on filter, disabled, and hide flag.
+        """
+        n = 0
+        for c in self.keynoteFile.categories:
+            found = False
+            for k in c.keynotes:
+                if k.filter or (self.inactiveHidden and k.disabled):
+                    self.hideKeynote(k)
+                else:
+                    self.unHideKeynote(k)
+                    found = True
+            # Disable tabs where no widgets are visible
+            if found:
+                self.categoryNotebook.EnableTab(n, True)
+            else:
+                self.categoryNotebook.EnableTab(n, False)
+            n += 1
+            c.pageWidget.Layout()
+
     def onFilterKey(self, event):
         """
         Hide keynotes that don't match a search string.
@@ -155,52 +169,33 @@ class Application(wx.Frame):
 
     def onFilter(self, event=None):
         ss = self.sString.GetValue()
-        if ss == '':  # Show everything
-            n = 0
+        if ss == '':  # Remove the filter
             for c in self.keynoteFile.categories:
-                self.categoryNotebook.EnableTab(n, True)
-                n += 1
                 for k in (c.keynotes):
-                    self.unHideKeynote(k)
-                c.pageWidget.Layout()
-            return
-        n = 0
-        for c in self.keynoteFile.categories:
-            found = False
-            for k in c.keynotes:
-                ktext = k.textWidget.GetValue()
-                if ktext.upper().count(ss.upper()) > 0:
-                    found = True
-                    self.unHideKeynote(k)
-                else:
-                    self.hideKeynote(k)
-            if not found:
-                # Hide the tab
-                self.categoryNotebook.EnableTab(n, False)
-            n += 1
-            self.categoryNotebook.DoSizing()
-            c.pageWidget.Layout()
+                    k.filter = False
+        else:
+            for c in self.keynoteFile.categories:
+                for k in (c.keynotes):
+                    ktext = k.textWidget.GetValue()
+                    if ktext.upper().count(ss.upper()) > 0:
+                        k.filter = False
+                    else:
+                        k.filter = True
+        self.refreshKeynoteWidgets()
+        if event:
+            event.Skip()
 
     def onHideInactive(self, event):
         """
         Hide or show inactive keynotes
         """
         if self.inactiveHidden:
-            for c in self.keynoteFile.categories:
-                for k in c.keynotes:
-                    if k.disabled:
-                        self.unHideKeynote(k)
-                c.pageWidget.Layout()
             event.GetEventObject().SetLabelText('Hide Inactive')
             self.inactiveHidden = False
         else:
-            for c in self.keynoteFile.categories:
-                for k in c.keynotes:
-                    if k.disabled:
-                        self.hideKeynote(k)
-                c.pageWidget.Layout()
             event.GetEventObject().SetLabelText('Show Inactive')
             self.inactiveHidden = True
+        self.refreshKeynoteWidgets()
 
     def onOpenTxt(self, event):
         """
@@ -213,6 +208,7 @@ class Application(wx.Frame):
         Open an Excel file
         """
         self.openFile('Excel')
+        # self.loadXlsx.Enable(False)  # Grey out the button
 
     def openFile(self, fileType):
         """
@@ -231,16 +227,22 @@ class Application(wx.Frame):
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) \
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
+                self.msg('Load canceled by user')
                 return
-            # Make a keynoteFile object and populate
-            if self.keynoteFile:
-                logger.debug('Deleting information from the old file')
-                self.cleanUp()
+            logger.debug(f'self.keynoteFile = {self.keynoteFile}')
+            if self.keynoteFile is not None:
+                logger.debug('Flushing the old file')
+                self.onClose()
             else:
                 logger.debug('Creating a new keynoteFile')
-                self.keynoteFile = knm.keynoteFile()
+            # Make a keynoteFile object and populate
+            self.keynoteFile = knm.keynoteFile()
+            logger.debug(f'New keynoteFile created: # categories = '
+                         f'{len(self.keynoteFile.categories)}')
             try:
                 self.keynoteFile.load(fileDialog.GetPath(), fileType)
+                logger.info('New keynoteFile loaded: # categories = '
+                            f'{len(self.keynoteFile.categories)}')
             except IOError:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
@@ -287,15 +289,16 @@ class Application(wx.Frame):
         If file is unsaved, prompt for save.
         """
         if not self.keynoteFile:
+            print("no file to close")
             return
         if self.fileEdited:
             if wx.MessageBox("The file has not been saved.",
-                             "Continue?",
-                             wx.ICON_QUESTION | wx.YES_NO) != wx.YES:
+                             "Do you really want to close the file?",
+                             wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
-        self.keynoteFile.unlockFile(self.keynoteFile.fileName)
         self.cleanUp()
+        self.keynoteFile.unlockFile(self.keynoteFile.fileName)
         self.keynoteFile = None
         self.msg("Load a new file or exit.")
 
@@ -346,8 +349,7 @@ class Application(wx.Frame):
         if event.GetKeyCode() == wx.WXK_TAB:
             self.onTextChange(event)
             event.EventObject.Navigate()
-        else:
-            event.Skip()
+        event.Skip()
 
     def onTextChange(self, event):
         """
@@ -365,6 +367,16 @@ class Application(wx.Frame):
             self.msg(f"Updating text: {w.keynote.fullstring}")
             self.fileEdited = True
             self.currentCategory.pageWidget.Layout()
+        else:
+            self.msg("")
+        event.Skip()
+
+    def onMouseMove(self, event):
+        """
+        Mouse scrolling support.
+        """
+        logging.debug("Scroll event received")
+        self.categoryNotebook.GetCurrentPage().SetFocus()
 
     def addKeynote(self, kType):
         """
@@ -392,7 +404,6 @@ class Application(wx.Frame):
 
     def buildKeynote(self, page, k, color):
         """Create a row for a keynote"""
-        # print("Building keynote {}".format(k))
         kSizer = wx.BoxSizer(wx.HORIZONTAL)
         id = k.identifier
         kn = wx.StaticText(page, label=id)
@@ -423,20 +434,10 @@ class Application(wx.Frame):
         """
         Destroy the current widget set
         """
-        if self.keynoteFile:
-            if self.keynoteFile.categories:
-                for c in self.keynoteFile.categories:
-                    for k in c.keynotes:
-                        k.numberWidget.Destroy()
-                        k.textWidget.Destroy()
-                        k.disabledWidget.Destroy()
-        notebook = self.categoryNotebook
-        # If there was a file previously loaded, delete its pages and widgets
-        if notebook:
-            while notebook.GetPageCount():
-                notebook.DeletePage(0)
+        self.categoryNotebook.Destroy()
+        self.categoryNotebook = None
+        logger.debug('Notebook destroyed')
         self.panel.Layout()
-        self.keynoteFile.clear()
 
     def buildEditor(self):
         """
@@ -453,6 +454,11 @@ class Application(wx.Frame):
                 sizer.Add(kSizer, 0, wx.EXPAND, 2)
             return sizer
 
+        # Create the notebook for Categories
+        self.categoryNotebook = aui.AuiNotebook(self.panel)
+        self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
+        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
+                                   self.onPageChanged)
         notebook = self.categoryNotebook
         for c in self.keynoteFile.categories:  # Original data from the file
             logger.debug(f"Building category page for {c.name}")  # A category
@@ -473,11 +479,12 @@ class Application(wx.Frame):
             pageSizer.Add(c.demoSizer, 0, wx.EXPAND, 0)
             pageSizer.Add(c.existingSizer, 0, wx.EXPAND, 0)
             pageSizer.Add(c.newSizer, 0, wx.EXPAND, 0)
-
             page.SetSizer(pageSizer)
-            page.Layout()
+            page.Bind(wx.EVT_MOTION, self.onMouseMove)
         # Save the current category (the first one created)
+        print(f'Setting current category to {self.keynoteFile.categories[0]}')
         self.currentCategory = self.keynoteFile.categories[0]
+        self.mainBox.Layout()
 
 
 def main():
@@ -485,6 +492,7 @@ def main():
     Top level function processes arguments and runs the app.
     """
     global logger
+    logger.setLevel(logging.DEBUG)
     if len(sys.argv) == 2:
         flag = sys.argv[1]
         if flag == '-i':
@@ -494,7 +502,7 @@ def main():
             logger.debug('Setting logging level to WARN')
             logger.setLevel(logging.WARN)
         else:
-            print(f'Flag was <{flag}>')
+            logger.debug(f'Flag was <{flag}>')
     app = wx.App()
     Application().Show()
     app.MainLoop()
