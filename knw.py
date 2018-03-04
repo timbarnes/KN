@@ -43,6 +43,7 @@ class Application(wx.Frame):
         self.keynoteFile = None
         self.inactiveHidden = False
         self.fileEdited = False
+        self.currentCategory = None
         self.buildGUI()
 
     def buildGUI(self):
@@ -493,6 +494,7 @@ class Application(wx.Frame):
             page.SetSizer(pageSizer)
             page.Bind(wx.EVT_MOTION, self.onMouseMove)
         # Save the current category (the first one created)
+        print(f'Setting current category to {self.keynoteFile.categories[0]}')
         self.currentCategory = self.keynoteFile.categories[0]
         self.mainBox.Layout()
 
