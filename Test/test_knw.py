@@ -68,6 +68,8 @@ def test_application():
     app.onSaveTxt(0)  # Should be passed an EventObject
     app.onSaveXlsx(0)
     assert filecmp.cmp('singlecat.txt', 'singlecat_original.txt')
+    app.onClose()
+    assert os.path.isfile('singlecat.xlsx')
 
 
 def teardown():
