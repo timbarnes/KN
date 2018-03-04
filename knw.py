@@ -120,10 +120,11 @@ class Application(wx.Frame):
 
     def error(self, message, field=0):
         """
-        Print an error.
+        Emit an error.
         """
         logger.error(message)
         self.sb.SetStatusText(message, field)
+        wx.MessageBox(message, 'Error', wx.ICON_ERROR | wx.OK)
 
     @staticmethod
     def hideKeynote(k):
@@ -235,9 +236,9 @@ class Application(wx.Frame):
                 try:
                     user = new_file.upper().split("_")[1].split(".XLSX")[0]
                 except IndexError:
-                    self.msg(f'{new_file} is not a keynote file')
+                    self.error(f'{new_file} is not a keynote file')
                 else:
-                    self.msg(f'File is locked by user {user}')
+                    self.error(f'{new_file} is locked by user {user}')
                 return
             if self.keynoteFile is not None:
                 logger.debug('Flushing the old file')
