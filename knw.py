@@ -255,6 +255,7 @@ class Application(wx.Frame):
             else:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
+                return False
             if len(self.keynoteFile.categories) > 0:
                 # Data is stored in the keynoteFile record, so build the GUI
                 self.msg("Loaded file data")
@@ -262,6 +263,7 @@ class Application(wx.Frame):
                 self.buildEditor()
             else:
                 self.error("No records found")
+                return False
 
     def onSaveTxt(self, event):
         """
