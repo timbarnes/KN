@@ -249,11 +249,10 @@ class Application(wx.Frame):
             self.keynoteFile = knm.keynoteFile()
             logger.debug(f'New keynoteFile created: # categories = '
                          f'{len(self.keynoteFile.categories)}')
-            try:
-                self.keynoteFile.load(new_file, fileType)
+            if self.keynoteFile.load(new_file, fileType):
                 logger.info('New keynoteFile loaded: # categories = '
                             f'{len(self.keynoteFile.categories)}')
-            except IOError:
+            else:
                 self.error("Unable to load file {}".format(
                     self.keynoteFile.fileName))
             if len(self.keynoteFile.categories) > 0:

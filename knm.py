@@ -225,11 +225,12 @@ class keynoteFile(object):
         #     self.loadTxt(self.lockedName(fileName))
         if fileType == 'Excel':
             if self.checkLock(fileName):
-                self.loadXlsx(self.lockedName(fileName))
+                return self.loadXlsx(self.lockedName(fileName))
             else:
                 logger(f'File not found: {fileName}')
         else:
             logger('Bad fileType: {fileType}')
+        return False
 
     # def loadTxt(self, keynoteFile):
     #     """
