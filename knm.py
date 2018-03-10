@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+# import portalocker
 import logging
 from getpass import getuser
 from openpyxl import Workbook, load_workbook
@@ -141,10 +142,6 @@ class Keynote(object):
             d = self.category.number
         else:
             d = '-'
-        if self.number is not None:
-            n = self.number
-        else:
-            n = '-'
         return f"{self.identifier}\t{self.text}\t{d}"
 
     def __str__(self):
@@ -190,9 +187,21 @@ class keynoteFile(object):
         result = os.path.isfile(name)
         logger.debug(f'Locking file: {name}')
         if result:
-            shutil.copy(name, name + '.' + str(int(time.time())))
-            os.rename(name, self.lockedName(name))
-            self.fileName = name
+            dir, file = os.path.split(name)
+            lock_file = f"~${file}"
+            lock_path = os.path.join(dir, lock_file)
+            if os.path.isfile(lock_path):
+                logger.warn("File locked by Excel")
+                return False
+            # self.lock = portalocker.Lock(name, flags=portalocker.LOCK_EX)
+            try:
+                shutil.copy(name, name + '.' + str(int(time.time())))
+                os.rename(name, self.lockedName(name))
+                self.fileName = name
+            except Exception as e:
+                logger.warn("Unable to lock file")
+                print(e)
+                return False
         return result  # Will be False if there's no file
 
     def unlockFile(self, name):
@@ -227,9 +236,9 @@ class keynoteFile(object):
             if self.checkLock(fileName):
                 return self.loadXlsx(self.lockedName(fileName))
             else:
-                logger(f'File not found: {fileName}')
+                logger.warn(f'File not found: {fileName}')
         else:
-            logger('Bad fileType: {fileType}')
+            logger.warn('Bad fileType: {fileType}')
         return False
 
     # def loadTxt(self, keynoteFile):

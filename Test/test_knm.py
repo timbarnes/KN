@@ -127,6 +127,6 @@ def test_load():
 
 def teardown():
     if os.path.isfile('testfile2 keynotes_tim.xlsx'):
-        os.remove('testfile2_tim.xlsx')
+        os.remove('testfile2 keynotes_tim.xlsx')
     for f in glob.glob('testfile2 keynotes.xlsx.*'):
         os.remove(f)
