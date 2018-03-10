@@ -180,29 +180,51 @@ class keynoteFile(object):
         parts = name.rsplit('.', 1)
         return parts[0] + '_' + self.user + '.' + parts[1]
 
+    def lockable(self, name):
+        """
+        Determine if the file is present and can be locked. No side effects.
+        """
+        logger.debug(f'Checking lock on file: {name}')
+        if not os.path.isfile(name):
+            print("File does not exist.")
+            return False
+        # Check for an Excel lock file
+        dir, file = os.path.split(name)
+        lock_file = f"~${file}"
+        lock_path = os.path.join(dir, lock_file)
+        if os.path.isfile(lock_path):
+            print("File locked by Excel")
+            return False
+        # Check that the file is named properly
+        if name.upper().count('NOTES.XLSX') == 0:
+            print("Not a keynote file")
+            return False
+            # Check it's not locked by knm
+        try:
+            user = file.upper().split("_")[1].split(".XLSX")[0]
+        except IndexError:
+            print("File can be locked!")
+            return True
+        else:
+            print(f'{new_file} is locked by user {user}')
+            return False
+
     def lockFile(self, name):
         """
         Make a backup then lock the file (via copy)
         """
-        result = os.path.isfile(name)
-        logger.debug(f'Locking file: {name}')
-        if result:
-            dir, file = os.path.split(name)
-            lock_file = f"~${file}"
-            lock_path = os.path.join(dir, lock_file)
-            if os.path.isfile(lock_path):
-                logger.warn("File locked by Excel")
-                return False
-            # self.lock = portalocker.Lock(name, flags=portalocker.LOCK_EX)
+        if self.lockable(name):
+            logger.debug(f'Locking file: {name}')
+            # Execute the backup and lock
             try:
                 shutil.copy(name, name + '.' + str(int(time.time())))
                 os.rename(name, self.lockedName(name))
                 self.fileName = name
             except Exception as e:
                 logger.warn("Unable to lock file")
-                print(e)
+                logger.error(str(e))
                 return False
-        return result  # Will be False if there's no file
+        return name  # Will be False if there's no file
 
     def unlockFile(self, name):
         logger.debug(f'Unlocking file {name}')

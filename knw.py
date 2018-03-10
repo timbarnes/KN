@@ -223,8 +223,7 @@ class Application(wx.Frame):
             self.error("Save: filetype error")
             return
         # We're ready to load the file
-        with wx.FileDialog(self, "Open keynote text file",
-                           wildcard=wc,
+        with wx.FileDialog(self, "Open keynote text file", wildcard=wc,
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) \
                 as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -232,21 +231,20 @@ class Application(wx.Frame):
                 return
             logger.debug(f'self.keynoteFile = {self.keynoteFile}')
             new_file = fileDialog.GetPath()
-            if new_file.upper().count('NOTES.XLSX') == 0:
-                try:
-                    user = new_file.upper().split("_")[1].split(".XLSX")[0]
-                except IndexError:
-                    self.error(f'{new_file} is not a keynote file')
+            # Check the file is the right type and available for locking
+            kf = knm.keynoteFile()
+            if not kf.lockable(new_file):
+                self.error("Unable to lock file")
+                return False
+            if self.keynoteFile:
+                if self.keynoteFile.fileName is not None:
+                    logger.debug('Flushing the old file')
+                    self.onClose()
                 else:
-                    self.error(f'{new_file} is locked by user {user}')
-                return
-            if self.keynoteFile is not None:
-                logger.debug('Flushing the old file')
-                self.onClose()
-            else:
-                logger.debug('Creating a new keynoteFile')
-            # Make a keynoteFile object and populate
+                    logger.debug('Creating a new keynoteFile')
+            # Make a new keynote file either way
             self.keynoteFile = knm.keynoteFile()
+            # Populate the keynoteFile
             logger.debug(f'New keynoteFile created: # categories = '
                          f'{len(self.keynoteFile.categories)}')
             if self.keynoteFile.load(new_file, fileType):
