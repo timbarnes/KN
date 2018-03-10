@@ -344,13 +344,6 @@ class Application(wx.Frame):
         val = val.GetCurrentPage()
         self.currentCategory = val.category
 
-    def onPageClose(self, event):
-        """
-        Disable tab closing.
-        """
-        self.msg("Tab closing disabled")
-        event.Veto()
-
     def onDisableCheck(self, event):
         """
         Update keynote record based on GetValue.
@@ -473,12 +466,12 @@ class Application(wx.Frame):
             return sizer
 
         # Create the notebook for Categories
-        self.categoryNotebook = aui.AuiNotebook(self.panel)
+        style = (aui.AUI_NB_TOP | aui.AUI_NB_SCROLL_BUTTONS |
+                 aui.AUI_NB_SMART_TABS)
+        self.categoryNotebook = aui.AuiNotebook(self.panel, agwStyle=style)
         self.mainBox.Add(self.categoryNotebook, 1, wx.EXPAND | wx.ALL, 8)
         self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
                                    self.onPageChanged)
-        self.categoryNotebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CLOSE,
-                                   self.onPageClose)
         notebook = self.categoryNotebook
         for c in self.keynoteFile.categories:  # Original data from the file
             logger.debug(f"Building category page for {c.name}")  # A category
