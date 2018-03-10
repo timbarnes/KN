@@ -166,6 +166,7 @@ class keynoteFile(object):
         self.user = getuser()  # We use the username for the lock
         self.modified = False  # Tells us if the file content has been changed
         self.categories = []   # A list of categories, with keynotes attached
+        self.lockError = ""    # A string explaining why a file can't be locked
         logger.debug('Created new empty keynoteFile record')
 
     def clear(self):
@@ -186,28 +187,28 @@ class keynoteFile(object):
         """
         logger.debug(f'Checking lock on file: {name}')
         if not os.path.isfile(name):
-            print("File does not exist.")
+            self.lockError = "File does not exist."
             return False
         # Check for an Excel lock file
         dir, file = os.path.split(name)
         lock_file = f"~${file}"
         lock_path = os.path.join(dir, lock_file)
         if os.path.isfile(lock_path):
-            print("File locked by Excel")
+            self.lockError = "File is locked by Excel"
             return False
-        # Check that the file is named properly
-        if name.upper().count('NOTES.XLSX') == 0:
-            print("Not a keynote file")
-            return False
-            # Check it's not locked by knm
+        # Check it's not locked by knm
         try:
             user = file.upper().split("_")[1].split(".XLSX")[0]
         except IndexError:
-            print("File can be locked!")
-            return True
+            logger.debug("File is not locked by a user")
         else:
-            print(f'{new_file} is locked by user {user}')
+            self.lockError = f'File is locked by user {user}'
             return False
+        # Check that the file is named properly
+        if name.upper().count('NOTES.XLSX') == 0:
+            self.lockError = "Not a keynote file"
+            return False
+        return True
 
     def lockFile(self, name):
         """

@@ -234,7 +234,7 @@ class Application(wx.Frame):
             # Check the file is the right type and available for locking
             kf = knm.keynoteFile()
             if not kf.lockable(new_file):
-                self.error("Unable to lock file")
+                self.error(kf.lockError)
                 return False
             if self.keynoteFile:
                 if self.keynoteFile.fileName is not None:
@@ -259,6 +259,7 @@ class Application(wx.Frame):
                 self.msg("Loaded file data")
                 self.msg(self.keynoteFile.fileName, 1)
                 self.buildEditor()
+                self.fileEdited = False
             else:
                 self.error("No records found")
                 return False
@@ -301,8 +302,8 @@ class Application(wx.Frame):
             print("no file to close")
             return
         if self.fileEdited:
-            if wx.MessageBox("The file has not been saved.",
-                             "Do you really want to close the file?",
+            if wx.MessageBox("The current file has not been saved.",
+                             "Do you really want to abandon changes?",
                              wx.YES_NO) != wx.YES:
                 event.Veto()
                 return
