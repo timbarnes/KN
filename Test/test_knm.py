@@ -15,6 +15,8 @@ kf = None  # Handle for keynoteFile
 def setup():
     shutil.copyfile('testfile2 keynotes_original.xlsx',
                     'testfile2 keynotes.xlsx')
+    shutil.copyfile('singlecat keynotes_original.xlsx',
+                    'singlecat keynotes.xlsx')
 
 
 def test_category():
@@ -129,4 +131,8 @@ def teardown():
     if os.path.isfile('testfile2 keynotes_tim.xlsx'):
         os.remove('testfile2 keynotes_tim.xlsx')
     for f in glob.glob('testfile2 keynotes.xlsx.*'):
+        os.remove(f)
+    if os.path.isfile('singlecat keynotes_tim.xlsx'):
+        os.remove('tsinglecat keynotes_tim.xlsx')
+    for f in glob.glob('singlecat keynotes.xlsx.*'):
         os.remove(f)
