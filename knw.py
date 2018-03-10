@@ -409,7 +409,8 @@ class Application(wx.Frame):
         # Build the keynote widgets and add to the sizer
         sizer = self.buildKeynote(self.currentCategory.pageWidget, k, kColor)
         kSizer.Add(sizer, 0, wx.EXPAND, 0)
-        category.pageWidget.Layout()
+        category.pageWidget.Fit()
+        self.panel.Layout()
         self.fileEdited = True
 
     def buildKeynote(self, page, k, color):
