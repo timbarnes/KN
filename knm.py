@@ -314,7 +314,7 @@ class keynoteFile(object):
                 f.write(f"{c.number}\t{c.name}")
                 f.write('\n')
                 cCount += 1
-            f.write("99\tdisabled\n")
+            f.write("disabled\tdisabled\n")
             f.write('\n')  # A blank line
             for c in self.categories:
                 for k in c.keynotes:
