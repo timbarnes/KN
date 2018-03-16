@@ -69,10 +69,10 @@ class Application(wx.Frame):
         # Create the search / filter box
         sPrompt = wx.StaticText(self.panel, label="Search:")
         self.commands.Add(sPrompt, 0, wx.ALL, 8)
-        self.sString = wx.TextCtrl(self.panel)
+        self.sString = wx.TextCtrl(self.panel, style=wx.TE_PROCESS_ENTER)
         self.sString.SetMinSize(wx.Size(50, 20))
         self.commands.Add(self.sString, 2, wx.EXPAND | wx.ALL, 8)
-        self.sString.Bind(wx.EVT_KEY_DOWN, self.onFilterKey)
+        self.sString.Bind(wx.EVT_TEXT_ENTER, self.onFilter)
         self.filter = wx.Button(self.panel, label="Search")
         self.filter.Bind(wx.EVT_BUTTON, self.onFilter)
         self.commands.Add(self.filter, 0, wx.ALL, 8)
@@ -158,15 +158,6 @@ class Application(wx.Frame):
                 self.categoryNotebook.EnableTab(n, False)
             n += 1
             c.pageWidget.Layout()
-
-    def onFilterKey(self, event):
-        """
-        Hide keynotes that don't match a search string.
-        """
-        if event.GetKeyCode() in [wx.WXK_RETURN, wx.WXK_TAB, wx.WXK_CONTROL_F]:
-            self.onFilter()
-        else:
-            event.Skip()
 
     def onFilter(self, event=None):
         ss = self.sString.GetValue()
