@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['knw.py'],
-             pathex=['V:\\tim\\Documents\\code\\dev\\KN'],
+             pathex=['T:\\tim\\Documents\\code\\dev\\KN'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -26,4 +26,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False )
+          console=True )

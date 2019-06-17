@@ -76,14 +76,20 @@ class Application(wx.Frame):
         self.filter = wx.Button(self.panel, label="Search")
         self.filter.Bind(wx.EVT_BUTTON, self.onFilter)
         self.commands.Add(self.filter, 0, wx.ALL, 8)
+        # Create the filter clear buttons
+        self.clearFilter = wx.Button(self.panel, label="Clear search")
+        self.commands.Add(self.clearFilter, 0, wx.ALL, 8)
+        self.clearFilter.Bind(wx.EVT_BUTTON, self.onClearFilter)
         # Create save buttons
+        """
         self.saveText = wx.Button(self.panel, label="Save .txt")
         self.commands.Add(self.saveText, 0, wx.ALL, 8)
         self.saveText.Bind(wx.EVT_BUTTON, self.onSaveTxt)
+        """
         self.Bind(wx.EVT_CLOSE, self.onClose)
-        self.saveXlsx = wx.Button(self.panel, label='Save .xlsx')
-        self.saveXlsx.Bind(wx.EVT_BUTTON, self.onSaveXlsx)
-        self.commands.Add(self.saveXlsx, 0, wx.ALL, 8)
+        self.save = wx.Button(self.panel, label='Save')
+        self.save.Bind(wx.EVT_BUTTON, self.onSave)
+        self.commands.Add(self.save, 0, wx.ALL, 8)
         # Create close button
         # self.closeXlsx = wx.Button(self.panel, label='Close .xlsx')
         # self.closeXlsx.Bind(wx.EVT_BUTTON, self.onCloseXlsx)
@@ -177,6 +183,10 @@ class Application(wx.Frame):
         if event:
             event.Skip()
 
+    def onClearFilter(self, event=None):
+        self.sString.SetValue('')
+        self.onFilter(event)
+
     def onHideInactive(self, event):
         """
         Hide or show inactive keynotes
@@ -247,9 +257,10 @@ class Application(wx.Frame):
                 return False
             if len(self.keynoteFile.categories) > 0:
                 # Data is stored in the keynoteFile record, so build the GUI
-                self.msg("Loaded file data")
+                self.msg("Loaded file data, building...")
                 self.msg(self.keynoteFile.fileName, 1)
                 self.buildEditor()
+                self.msg('Ready')
                 self.fileEdited = False
             else:
                 self.error("No records found")
@@ -266,10 +277,12 @@ class Application(wx.Frame):
         self.msg("Saved {} categories; {} keynotes".format(*r))
         self.fileEdited = False
 
-    def onSaveXlsx(self, event):
+    def onSave(self, event):
         """
-        Write out the keynotes file as a spreadsheet.
+        Write out the keynotes file as a spreadsheet and as a text file.
         """
+        # Save the text file
+        self.onSaveTxt(event)
 
         self.msg("Saving Excel file {}".format(self.keynoteFile.fileName))
         # Move the old file before overwriting

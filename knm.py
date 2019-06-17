@@ -1,4 +1,5 @@
 import os
+import glob
 import shutil
 import time
 # import portalocker
@@ -86,8 +87,12 @@ class Keynote(object):
             if len(num_string) == 5:
                 if num_string[0] in 'DEN':
                     self.den = num_string[0]   # First character is D, E, or N
-                    self.catnum = int(num_string[1:3])  # Category Number
-                    self.number = int(num_string[3:6])
+                    try:
+                        self.catnum = int(num_string[1:3])  # Category Number
+                        self.number = int(num_string[3:6])
+                    except Exception:
+                        logging.error(f"Error in keynote {num_string}")
+                        return False
                     self.category = None
                 else:
                     logging.error(f"Bad first character: <{numString}>")
@@ -218,6 +223,14 @@ class keynoteFile(object):
             logger.debug(f'Locking file: {name}')
             # Execute the backup and lock
             try:
+                # Make a backup, after deleting existing backups
+                backups = glob.glob(name + '.[0-9][0-9][0-9]*')
+                logger.debug(f'Backups found: {backups}')
+                if backups:
+                    for f in backups:
+                        logger.debug(f'Removing {f}')
+                        os.remove(f)
+                # Make the new backup
                 shutil.copy(name, name + '.' + str(int(time.time())))
                 os.rename(name, self.lockedName(name))
                 self.fileName = name
